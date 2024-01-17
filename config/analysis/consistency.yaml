@@ -1,0 +1,14 @@
+consistency:
+  sensor: screen # possible sensor: screen, sms, call
+  type: short # consistency type: short, long
+  bins: 4H # time bin: 1H, 4H, 6H, 12H
+  freq: daily # possible values: daily, weekly
+  dist_func: cosine # possible values: cosine, jsd, emd
+  freeday: None # possbile values: True, False, None. If True, only include Sat/Sun. If False, only include Mon-Fri. If None, include every weekday.
+  pilot: False # If True, run preprocess on pilot study
+
+  input_path: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/${consistency.sensor}/features_${consistency.sensor}_${consistency.bins}_${consistency.freq}_freeday_${consistency.freeday}.csv"
+  output_path: "/m/cs/work/luongn1/momo_mood_analysis/data/rhythm/consistency/${consistency.type}_${consistency.sensor}_${consistency.bins}_${consistency.freq}_freeday_${consistency.freeday}.csv"
+  pilot_output_path: "/m/cs/work/luongn1/momo_mood_analysis/data/rhythm/pilot/consistency/${consistency.type}_${consistency.sensor}_${consistency.bins}_${consistency.freq}_freeday_${consistency.freeday}.csv"
+
+  

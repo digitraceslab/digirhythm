@@ -1,0 +1,6 @@
+comm:
+    sensor: call # possible sensor: sms, call
+    time_bin: 1H # time bin: 1H, 4H, 6H, 12H
+    study: main # or pilot
+    study_duration: 1344 # in hours, format: 8 week x 7 days x 24 hours
+    output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/${comm.study}/${comm.sensor}/${comm.sensor}_${comm.time_bin}.csv"

@@ -1,0 +1,8 @@
+bed:
+  pilot: False # If True, run preprocess on pilot
+
+  resample_path: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/bed/bed_resample.csv" # Process and Resample individual by 1 min, then save to this path
+  output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/bed/bed_sleep.csv"
+
+  pilot_resample_path: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/bed/bed_resample.csv"
+  pilot_output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/bed/bed_sleep.csv"

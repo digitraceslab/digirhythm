@@ -1,0 +1,29 @@
+rhythm:
+  sensor: call # possible sensor: screen, sms, call
+  time_bin: 1H # time bin: 1H, 4H, 6H, 12H
+  freq: daily # possible values: daily, weekly
+  dist_func: cosine # or: cosine, jsd
+  freeday: None # possbile values: True, False, None. If True, only include Sat/Sun. If False, only include Mon-Fri. If None, include every weekday.
+  study: main # or pilot
+
+  output: "/m/cs/work/luongn1/momo_mood_analysis/data/rhythm/${rhythm.study}/${rhythm.sensor}/${rhythm.sensor}_${rhythm.time_bin}_${rhythm.freq}_freeday_${rhythm.freeday}.csv"
+  
+survey:
+    id:
+      - bg_age
+      - bg_sex
+      - children
+      - work_days
+      - work_hours
+      - work_regular
+      - work_parttime
+      - work_unemployed
+      - habitation
+      - bg_education
+    pilot: False  # If True, run preprocess on pilot
+
+    output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/survey_background.csv"
+    pilot_output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/survey_background.csv"
+
+
+    

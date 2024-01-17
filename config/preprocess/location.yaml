@@ -1,0 +1,5 @@
+pilot: True
+n_places: 5
+feature: 'significant_places' # possible values: 'significant_place', 'distance', 'num_significant_place'
+output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/location/${feature}.csv"
+pilot_output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/location/${feature}.csv"

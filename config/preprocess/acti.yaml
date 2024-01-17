@@ -1,0 +1,13 @@
+acti_sleep:
+  pilot: False # If True, run preprocess on pilot
+
+  oo_path: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/acti/oo_sleep.csv"
+  output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/acti/acti_sleep.csv"
+
+  pilot_oo_path: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/acti/oo_sleep.csv"
+  pilot_output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/acti/acti_sleep.csv"
+
+acti_activity:
+  pilot: False # If True, run preprocess on pilot
+  output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/acti/acti_activity.csv"
+  pilot_output: "/m/cs/work/luongn1/momo_mood_analysis/data/processed/pilot/acti/acti_activity.csv"
