@@ -3,15 +3,17 @@ import pandas as pd
 from datetime import timedelta
 import pytz
 
+
 class CoronaProcessor:
-    
-    '''
+
+    """
     Add customized behaviours here as well
-    '''
+    """
+
     def __init__(self, activity_df, sleep_df):
         self.activity_df = activity_df
         self.sleep_df = sleep_df
-        
+
     def convert_datetime(self, df):
         datetime_cols = ["date", "sleep_start_time", "sleep_end_time"]
 
@@ -22,7 +24,6 @@ class CoronaProcessor:
         return df
 
     def filter_first_last_day(self, grouped):
-        
         if len(grouped["date"].unique()) > 2:
             return grouped.apply(
                 lambda x: x[(x.date > x.date.min()) & (x.date < x.date.max())]
@@ -34,7 +35,7 @@ class CoronaProcessor:
         return grouped
 
     def pivot_hourly_value(self, df):
-        df["hour"] = "hour_" + pd.to_datetime(df["time"]).dt.strftime('%H')
+        df["hour"] = "hour_" + pd.to_datetime(df["time"]).dt.strftime("%H")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
@@ -47,23 +48,22 @@ class CoronaProcessor:
         return pivoted_df
 
     def normalize_activity(self, df):
-
-        '''
+        """
         Allocate activiy count into bins, then calculate the distribution
-        '''
-        df['steps_sum'] = df.filter(like='hour').sum(axis=1)
-        
+        """
+        df["steps_sum"] = df.filter(like="hour").sum(axis=1)
+
         # Select columns starting with 'hour'
-        hour_columns = df.columns[df.columns.str.startswith('hour')]
+        hour_columns = df.columns[df.columns.str.startswith("hour")]
 
         # Perform the division by 'steps_sum' column and round the result
-        normalized_hours = df[hour_columns].div(df['steps_sum'], axis=0).round(3)
+        normalized_hours = df[hour_columns].div(df["steps_sum"], axis=0).round(3)
 
         # Update the DataFrame with the normalized and rounded values
         df[hour_columns] = normalized_hours
 
         return df
-    
+
     def compute_sleep_var(self, df):
         """
         Compute sleep variables
@@ -76,8 +76,7 @@ class CoronaProcessor:
             df["tib"] - df["total_interruption_duration"] / 3600
         )  # sleep time = time in bed - interruption
         df["midsleep"] = (
-            df["sleep_start_time"]
-            + (df["sleep_end_time"] - df["sleep_start_time"]) / 2
+            df["sleep_start_time"] + (df["sleep_end_time"] - df["sleep_start_time"]) / 2
         )
 
         # midsleep
@@ -113,13 +112,14 @@ class CoronaProcessor:
 
     # TODO: Maybe add some preprocess options here
     def run(self):
-        
         processed_activity_df = (
             self.activity_df.pipe(self.convert_datetime)
             .groupby("subject_id")
             .pipe(self.filter_first_last_day)  # remove first and last day of data
             .reset_index(drop=True)
-            .pipe(self.pivot_hourly_value)  # pivot so that hourly step count becomes columns
+            .pipe(
+                self.pivot_hourly_value
+            )  # pivot so that hourly step count becomes columns
             .reset_index()
             .pipe(self.normalize_activity)
         )
@@ -133,9 +133,10 @@ class CoronaProcessor:
             .pipe(self.filter_outlier_tst)  # 3 < tst < 13
             .pipe(self.filter_outlier_midsleep)  # midsleep within 2*std
         )
-        
+
         return (processed_activity_df, processed_sleep_df)
-    
+
+
 class VectorizeCorona:
     def __init__(self):
         self.activity_df = pd.DataFrame()
@@ -169,7 +170,6 @@ class VectorizeCorona:
             .reset_index(drop=True)
         )
 
-    
     def reindex(self, df):
         """
         Reindex by date users remain in study
@@ -182,8 +182,7 @@ class VectorizeCorona:
         df["day_in_study"] = df.groupby("subject_id").cumcount() + 1
 
         return df
-    
-    
+
     def filter_insufficient_data(self, df, threshold=14):
         """
         Remove users with insufficient data points (max day in study < threshold)
@@ -196,12 +195,10 @@ class VectorizeCorona:
         return df
 
     def assign_weekday(self, df):
-
-        df['weekday'] = df.date.apply(lambda x: True if x.weekday() < 5 else False)
+        df["weekday"] = df.date.apply(lambda x: True if x.weekday() < 5 else False)
         return df
 
     def preprocess(self, processor: CoronaProcessor):
-        
         processed_activity_df, processed_sleep_df = processor.run()
 
         # Pivot by date column
