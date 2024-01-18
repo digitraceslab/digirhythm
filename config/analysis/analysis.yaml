@@ -1,5 +1,0 @@
-location:
-    task: lsd # or plot_cdf, ks_test, 
-    dist_func: cosine # possible values: cosine, jsd
-    pilot: False # If True, run analysis on pilot study
-    feature: "empty" # Feature to compute rhythm for (e.g., call duration)
