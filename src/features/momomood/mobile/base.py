@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append("../../../")
 
 import niimpy
@@ -7,34 +8,35 @@ from dataclasses import dataclass
 
 @dataclass
 class BaseProcessor:
-    
-    '''
+
+    """
     This is the base class for all sensor processing classes
-    '''
-    
+    """
+
     path: str
     table: str
     group: str
     data: pd.DataFrame = pd.DataFrame()
-        
+
     # Optional var
     batt_path: str = ""
     batt_data: pd.DataFrame = pd.DataFrame()
-        
+
     def __post_init__(self) -> None:
-        self.data = niimpy.read_sqlite(self.path, self.table,  tz="Europe/Helsinki", add_group=self.group)
-        
+        self.data = niimpy.read_sqlite(
+            self.path, self.table, tz="Europe/Helsinki", add_group=self.group
+        )
+
     def extract_features(self) -> pd.DataFrame:
-        '''
+        """
         This function should be implemented by children classes
-        '''
+        """
         raise NotImplementedError()
 
     def drop_duplicates_and_sort(self, data: pd.DataFrame) -> pd.DataFrame:
         data.sort_values(by=["user", "datetime"], inplace=True)
         data = data.drop_duplicates(["user", "datetime"])
         return data
-
 
     def remove_first_last_day(self, data: pd.DataFrame):
         """
@@ -59,8 +61,9 @@ class BaseProcessor:
 
     def remove_timezone_info(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.tz_localize(None)
+        print(data)
         return data
-    
+
     def add_group(self, df, group):
         df["group"] = group
         return df
