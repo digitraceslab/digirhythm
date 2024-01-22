@@ -6,6 +6,7 @@ import niimpy
 import pandas as pd
 from dataclasses import dataclass
 
+
 @dataclass
 class BaseProcessor:
 

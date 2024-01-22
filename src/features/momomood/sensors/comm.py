@@ -3,9 +3,14 @@ from dataclasses import dataclass
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.communication as comm
+from ....decorators import save_output
+
+DATA_PATH = 'data/interim/'
 
 @dataclass
 class CallProcessor(BaseProcessor):
+    
+    @save_output(DATA_PATH + "call_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         wrapper_features = {
             comm.call_count: {
@@ -58,6 +63,8 @@ class CallProcessor(BaseProcessor):
 
 
 class SmsProcessor(BaseProcessor):
+    
+    @save_output(DATA_PATH + "sms_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": time_bin}}}
 
@@ -76,6 +83,7 @@ class SmsProcessor(BaseProcessor):
 
         return df
 
+    
     def pivot(self, df):
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
@@ -87,7 +95,7 @@ class SmsProcessor(BaseProcessor):
             values=["incoming_count", "outgoing_count"],
             fill_value=0,
         )
-        print(pivoted_df)
+
         return pivoted_df
 
     def flatten_columns(self, df):
