@@ -62,7 +62,6 @@ class BaseProcessor:
 
     def remove_timezone_info(self, data: pd.DataFrame) -> pd.DataFrame:
         data = data.tz_localize(None)
-        print(data)
         return data
 
     def add_group(self, df, group):

@@ -2,14 +2,14 @@ from .base import BaseProcessor
 from dataclasses import dataclass
 import niimpy
 import pandas as pd
-import niimpy.preprocessing.screen as screen
+import niimpy.preprocessing.location as location
 from ....decorators import save_output
 
 DATA_PATH = "data/interim/"
 
 
 @dataclass
-class ScreenProcessor(BaseProcessor):
+class LocationProcessor(BaseProcessor):
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
         self.batt_data = niimpy.read_sqlite(
@@ -19,35 +19,26 @@ class ScreenProcessor(BaseProcessor):
             add_group=self.group,
         )
 
-    @save_output(DATA_PATH + "screen_binned.csv", "csv")
+    @save_output(DATA_PATH + "location_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         """
         time_bin: resampling rate
         """
-        wrapper_features = {
-            screen.screen_duration: {
-                "screen_column_name": "screen_status",
-                "resample_args": {"rule": time_bin},
-            },
-            screen.screen_count: {
-                "screen_column_name": "screen_status",
-                "resample_args": {"rule": time_bin},
-            },
+        
+        config["resample_args"] = {"rule": "1D"}
+        # extract only distance related features
+        features = {
+            location.location_distance_features: {"rule": "1D"}, # arguments,
+            location.location_significant_place_features: {"rule": "1D"},
+            location.location_number_of_significant_places: {"rule": "1D"}
         }
-
-        batt_data = (
-            self.batt_data.pipe(self.drop_duplicates_and_sort)
-            .pipe(self.remove_first_last_day)
-            .pipe(self.remove_timezone_info)
-        )
-
+        
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
             .pipe(self.remove_timezone_info)
             .pipe(
-                screen.extract_features_screen,
-                batt_data,
+                location.extract_features_location,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.add_group, self.group)
@@ -83,3 +74,11 @@ class ScreenProcessor(BaseProcessor):
     def flatten_columns(self, df):
         df.columns = ["_".join(col).strip() for col in df.columns.values]
         return df
+    
+    def filter_locations(df, remove_disabled=False, remove_network=True, remove_zeros=True):
+        return location.filter_location(
+            df,
+            remove_disabled=remove_disabled,
+            remove_network=remove_network,
+            remove_zeros=remove_zeros,
+        )

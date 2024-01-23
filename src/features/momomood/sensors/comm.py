@@ -5,11 +5,11 @@ import pandas as pd
 import niimpy.preprocessing.communication as comm
 from ....decorators import save_output
 
-DATA_PATH = 'data/interim/'
+DATA_PATH = "data/interim/"
+
 
 @dataclass
 class CallProcessor(BaseProcessor):
-    
     @save_output(DATA_PATH + "call_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         wrapper_features = {
@@ -30,10 +30,11 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
             .reset_index()
+            .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .reset_index()
         )
 
         return df
@@ -44,7 +45,7 @@ class CallProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date"],
+            index=["user", "date", "group"],
             columns="hour",
             values=[
                 "incoming_count",
@@ -58,12 +59,12 @@ class CallProcessor(BaseProcessor):
         return pivoted_df
 
     def flatten_columns(self, df):
+        print(df)
         df.columns = ["_".join(col).strip() for col in df.columns.values]
         return df
 
 
 class SmsProcessor(BaseProcessor):
-    
     @save_output(DATA_PATH + "sms_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": time_bin}}}
@@ -75,15 +76,15 @@ class SmsProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
             .reset_index()
+            .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .reset_index()
         )
 
         return df
 
-    
     def pivot(self, df):
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
