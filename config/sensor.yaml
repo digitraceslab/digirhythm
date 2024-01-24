@@ -1,0 +1,3 @@
+processor:
+    sensor: call # possible sensor: sms, call
+    time_bin: 1H # time bin: 1H, 4H, 6H, 12H

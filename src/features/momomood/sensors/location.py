@@ -10,41 +10,56 @@ DATA_PATH = "data/interim/"
 
 @dataclass
 class LocationProcessor(BaseProcessor):
-    def __post_init__(self, *args, **kwargs):
-        super().__post_init__(*args, **kwargs)
-        self.batt_data = niimpy.read_sqlite(
-            self.batt_path,
-            table="awarebattery",
-            tz="Europe/Helsinki",
-            add_group=self.group,
-        )
-
     @save_output(DATA_PATH + "location_binned.csv", "csv")
-    def extract_features(self, time_bin="15T") -> pd.DataFrame:
+    def extract_features(self, time_bin) -> pd.DataFrame:
         """
         time_bin: resampling rate
         """
-        
-        config["resample_args"] = {"rule": "1D"}
-        # extract only distance related features
-        features = {
-            location.location_distance_features: {"rule": "1D"}, # arguments,
-            location.location_significant_place_features: {"rule": "1D"},
-            location.location_number_of_significant_places: {"rule": "1D"}
-        }
+
+        # Preprocess pipeline
+        df = (
+            self.data.pipe(
+                self.converter, types={"accuracy": float}
+            )  # Convert column type
+            .pipe(self.remove_first_last_day)  # Remove first and last day for each user
+            .pipe(
+                self.remove_timezone_info
+            )  # Remove timezone-specific, return naive-timezone timestamp
+            .pipe(
+                location.filter_location,
+                remove_disabled=True,
+                remove_network=True,
+                remove_zeros=True,
+            )  # Filter disabled and network location
+        )
+
+        # Resample into 5-min bins
+        resampled_df = (
+            (
+                df.groupby(["user", "device", "group"])[
+                    ["double_latitude", "double_longitude", "double_speed"]
+                ]
+                .resample("5T")
+                .median()
+                .reset_index()
+            )
+            .set_index("datetime")
+            .dropna()
+        )
+
+        config = {}
+        config["resample_args"] = {"rule": time_bin}
         
         df = (
-            self.data.pipe(self.drop_duplicates_and_sort)
-            .pipe(self.remove_first_last_day)
-            .pipe(self.remove_timezone_info)
-            .pipe(
+            resampled_df.pipe(
                 location.extract_features_location,
-                features=wrapper_features,
+                features={
+                    location.location_distance_features: config,
+                    location.location_significant_place_features: config
+                },
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.add_group, self.group)
             .reset_index()
-            .pipe(self.pivot)
-            .pipe(self.flatten_columns)
         )
 
         return df
@@ -70,12 +85,17 @@ class LocationProcessor(BaseProcessor):
         )
 
         return pivoted_df
-
-    def flatten_columns(self, df):
-        df.columns = ["_".join(col).strip() for col in df.columns.values]
-        return df
     
-    def filter_locations(df, remove_disabled=False, remove_network=True, remove_zeros=True):
+    def converter(self, df, types):
+        """
+        Convert column data types
+        """
+        df = df.astype(types)
+        return df
+
+    def filter_locations(
+        self, df, remove_disabled=False, remove_network=True, remove_zeros=True
+    ):
         return location.filter_location(
             df,
             remove_disabled=remove_disabled,
