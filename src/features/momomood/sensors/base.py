@@ -11,12 +11,35 @@ from dataclasses import dataclass
 class BaseProcessor:
 
     """
-    This is the base class for all sensor processing classes
+    BaseProcessor is the base class for all sensor processing classes. It provides a structured
+    way to handle sensor data processing with support for different frequencies of data
+    aggregation and summarization.
+
+    Attributes:
+        path (str): The file system path where sensor data files are located.
+        table (str): The name of the database table to process.
+        group (str): The name of the data grouping to apply, typically based on sensor ID or location.
+        data (pd.DataFrame): The data frame containing the sensor data. Defaults to an empty DataFrame.
+        frequency (str): Defines the frequency for data aggregation and summarization. It determines
+                         how the sensor data is processed and transformed. The possible values are:
+            - '4epochs': Divides each day into four time periods (epochs). Each epoch represents
+                         a specific part of the day:
+                * Night: 00:00 - 05:59
+                * Morning: 06:00 - 11:59
+                * Afternoon: 12:00 - 17:59
+                * Evening: 18:00 - 23:59
+                         This is useful for analyzing patterns based on time of day.
+            - 'daily': Aggregates data on a daily basis, summing up values for each day. This
+                       frequency is suitable for analyzing daily trends and behaviors.
+            - '14d': Aggregates data from the past 14 days (two weeks) from the current date.
+                     This provides a short-term retrospective view of the data, allowing for
+                     analysis of recent trends and patterns.
     """
 
     path: str
     table: str
     group: str
+    frequency: str
     data: pd.DataFrame = pd.DataFrame()
 
     # Optional var
@@ -30,9 +53,13 @@ class BaseProcessor:
 
     def extract_features(self) -> pd.DataFrame:
         """
-        This function should be implemented by children classes
+        Extract features based on the specified frequency.
+            pd.DataFrame: A DataFrame containing the extracted features.
+
+        Raises:
+            NotImplementedError: This is a placeholder method and should be implemented in child classes.
         """
-        raise NotImplementedError()
+        raise NotImplementedError("This method should be implemented by child classes.")
 
     def drop_duplicates_and_sort(self, data: pd.DataFrame) -> pd.DataFrame:
         data.sort_values(by=["user", "datetime"], inplace=True)
@@ -60,10 +87,23 @@ class BaseProcessor:
 
             return res
 
-    def remove_timezone_info(self, data: pd.DataFrame) -> pd.DataFrame:
-        data = data.tz_localize(None)
-        return data
+    def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.tz_localize(None)
+        return df
 
     def add_group(self, df, group):
         df["group"] = group
+        return df
+    
+    # Roll over past n days and sum up values
+    def roll(self, df, groupby, days):
+
+        df = df.groupby(groupby).rolling(days, on='date').sum().reset_index()
+        print(df.head())
+        return df
+
+
+    def flatten_columns(self, df):
+
+        df.columns = [":".join(col).strip() for col in df.columns.values]
         return df

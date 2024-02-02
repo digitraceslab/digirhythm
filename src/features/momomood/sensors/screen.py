@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.screen as screen
-from ....decorators import save_output
+from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/"
 
@@ -19,7 +19,7 @@ class ScreenProcessor(BaseProcessor):
             add_group=self.group,
         )
 
-    @save_output(DATA_PATH + "screen_binned.csv", "csv")
+    @save_output_with_freq(DATA_PATH + "screen_binned.csv", "csv")
     def extract_features(self, time_bin="15T") -> pd.DataFrame:
         """
         time_bin: resampling rate
@@ -50,10 +50,11 @@ class ScreenProcessor(BaseProcessor):
                 batt_data,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
             .reset_index()
+            .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .reset_index()
         )
 
         return df
@@ -74,6 +75,10 @@ class ScreenProcessor(BaseProcessor):
                 "screen_use_durationtotal",
                 "screen_off_durationtotal",
                 "screen_on_durationtotal",
+                "screen_on_durationtotal",
+                "screen_on_count",
+                "screen_off_count",
+                "screen_use_count",
             ],
             fill_value=0,
         )

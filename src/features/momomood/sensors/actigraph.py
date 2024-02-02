@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.screen as screen
-from ....decorators import save_output
+from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/"
 
@@ -13,7 +13,7 @@ class ActigraphProcessor(BaseProcessor):
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
 
-    @save_output(DATA_PATH + "actigraph_binned.csv", "csv")
+    @save_output_with_freq(DATA_PATH + "actigraph_binned.csv", "csv")
     def extract_features(self, time_bin="1H") -> pd.DataFrame:
         """
         time_bin: resampling rate
@@ -33,7 +33,8 @@ class ActigraphProcessor(BaseProcessor):
             .reset_index()
         )
 
-        print(df)
+        sleep_df = ()
+
         return df
 
     def pivot(self, df):

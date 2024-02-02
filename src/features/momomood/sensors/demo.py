@@ -14,35 +14,48 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     sensor = cfg.processor.sensor
-    time_bin = cfg.processor.time_bin
+    frequency = cfg.processor.frequency
 
     # Processor execution based on command line argument
     if sensor == "acti":
         acti_processor = ActigraphProcessor(
-            path=PATHS[group]["actiwatchfull"], table="ActiwatchFull", group=group
+            path=PATHS[group]["actiwatchfull"],
+            table="ActiwatchFull",
+            group=group,
+            frequency=frequency,
         )
-        data = acti_processor.extract_features(time_bin=time_bin).reset_index()
+        data = acti_processor.extract_features().reset_index()
     elif sensor == "screen":
         screen_processor = ScreenProcessor(
             path=PATHS[group]["awarescreen"],
             table="AwareScreen",
             group=group,
             batt_path=PATHS[group]["awarebattery"],
+            frequency=frequency,
         )
-        data = screen_processor.extract_features(time_bin=time_bin).reset_index()
+        data = screen_processor.extract_features().reset_index()
     elif sensor == "sms":
         sms_processor = SmsProcessor(
-            path=PATHS[group]["awaremessages"], table="AwareMessages", group=group
+            path=PATHS[group]["awaremessages"],
+            table="AwareMessages",
+            group=group,
+            frequency=frequency,
         )
-        data = sms_processor.extract_features(time_bin=time_bin).reset_index()
+        data = sms_processor.extract_features().reset_index()
     elif sensor == "call":
         call_processor = CallProcessor(
-            path=PATHS[group]["awarecalls"], table="AwareCalls", group=group
+            path=PATHS[group]["awarecalls"],
+            table="AwareCalls",
+            group=group,
+            frequency=frequency,
         )
-        data = call_processor.extract_features(time_bin=time_bin).reset_index()
+        data = call_processor.extract_features().reset_index()
     elif sensor == "location":
         loc_processor = LocationProcessor(
-            path=PATHS[group]["location"], table="AwareLocation", group=group
+            path=PATHS[group]["location"],
+            table="AwareLocation",
+            group=group,
+            frequency=frequency,
         )
         data = loc_processor.extract_features(time_bin=time_bin).reset_index()
     else:

@@ -3,14 +3,14 @@ from dataclasses import dataclass
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.location as location
-from ....decorators import save_output
+from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/"
 
 
 @dataclass
 class LocationProcessor(BaseProcessor):
-    @save_output(DATA_PATH + "location_binned.csv", "csv")
+    @save_output_with_freq(DATA_PATH + "location_binned.csv", "csv")
     def extract_features(self, time_bin) -> pd.DataFrame:
         """
         time_bin: resampling rate
@@ -49,13 +49,13 @@ class LocationProcessor(BaseProcessor):
 
         config = {}
         config["resample_args"] = {"rule": time_bin}
-        
+
         df = (
             resampled_df.pipe(
                 location.extract_features_location,
                 features={
                     location.location_distance_features: config,
-                    location.location_significant_place_features: config
+                    location.location_significant_place_features: config,
                 },
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.add_group, self.group)
@@ -85,7 +85,7 @@ class LocationProcessor(BaseProcessor):
         )
 
         return pivoted_df
-    
+
     def converter(self, df, types):
         """
         Convert column data types
