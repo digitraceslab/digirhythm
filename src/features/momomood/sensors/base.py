@@ -29,11 +29,9 @@ class BaseProcessor:
                 * Afternoon: 12:00 - 17:59
                 * Evening: 18:00 - 23:59
                          This is useful for analyzing patterns based on time of day.
-            - 'daily': Aggregates data on a daily basis, summing up values for each day. This
-                       frequency is suitable for analyzing daily trends and behaviors.
-            - '14d': Aggregates data from the past 14 days (two weeks) from the current date.
-                     This provides a short-term retrospective view of the data, allowing for
-                     analysis of recent trends and patterns.
+            - '7ds': Aggregates data from the past 7 days (one week) from the current date.
+            - '14ds': Aggregates data from the past 14 days (two weeks) from the current date.
+
     """
 
     path: str
@@ -94,16 +92,44 @@ class BaseProcessor:
     def add_group(self, df, group):
         df["group"] = group
         return df
-    
+
     # Roll over past n days and sum up values
     def roll(self, df, groupby, days):
-
-        df = df.groupby(groupby).rolling(days, on='date').sum().reset_index()
-        print(df.head())
+        df = df.groupby(groupby).rolling(days, on="date").sum().reset_index()
+        df = df.drop('level_2', axis=1)  # Drop the 'level_2' column
         return df
-
 
     def flatten_columns(self, df):
-
         df.columns = [":".join(col).strip() for col in df.columns.values]
         return df
+    
+    def rename_time_columns(self, df):
+        """
+        Rename columns from time indicators to parts of the day.
+
+        Parameters:
+        - df: pandas.DataFrame with columns to rename.
+
+        Returns:
+        - DataFrame with renamed columns.
+        """
+        # Mapping of time indicators to parts of the day
+        time_mapping = {
+            ':00': ':night',
+            ':06': ':morning',
+            ':12': ':afternoon',
+            ':18': ':evening'
+        }
+
+        # Rename columns based on the mapping
+        for time_indicator, part_of_day in time_mapping.items():
+            df.columns = [col.replace(time_indicator, part_of_day) for col in df.columns]
+
+        # Append suffix to indicate aggregation freq
+        if self.frequency != '4epochs':
+            df.columns = [f'{col}:{self.frequency}' for col in df.columns]
+        
+        return df
+
+
+        

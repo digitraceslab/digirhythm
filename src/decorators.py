@@ -20,7 +20,7 @@ def save_output_with_freq(file_name, file_type="csv"):
 
             # Append filename with frequency
             fn = f"{file_name}_{self.frequency}.{file_type}"
-            
+
             # Save to file based on the specified file type
             if file_type == "csv":
                 data.to_csv(fn, index=False)

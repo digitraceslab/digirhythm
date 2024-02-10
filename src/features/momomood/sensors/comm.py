@@ -5,18 +5,16 @@ import pandas as pd
 import niimpy.preprocessing.communication as comm
 from ....decorators import save_output_with_freq
 
-DATA_PATH = "data/interim/"
+DATA_PATH = "data/interim/momo/"
 
 
 @dataclass
 class CallProcessor(BaseProcessor):
-    
     @save_output_with_freq(DATA_PATH + f"calls", "csv")
     def extract_features(self) -> pd.DataFrame:
-        if self.frequency == "4epochs":
-            rule = "6H"
-        else:
-            rule = "1D"
+        
+        # Agg daily events into 6H bins
+        rule = "6H"
 
         wrapper_features = {
             comm.call_count: {
@@ -40,13 +38,15 @@ class CallProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .pipe(self.rename_time_columns)
             .reset_index()
         )
 
-        # Slice the dataframe based on frequency
-        if self.frequency == '2wks':
-            df = df.pipe(self.roll, groupby=['user', 'group'], days=14)
-        
+        # Roll the dataframe based on frequency
+        if self.frequency == "14ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+        elif self.frequency == "7ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
         return df
 
     def pivot(self, df):
@@ -69,12 +69,13 @@ class CallProcessor(BaseProcessor):
         return pivoted_df
 
 
-
 class SmsProcessor(BaseProcessor):
-
     @save_output_with_freq(DATA_PATH + "sms", "csv")
-    def extract_features(self, time_bin="15T") -> pd.DataFrame:
-        wrapper_features = {comm.sms_count: {"resample_args": {"rule": time_bin}}}
+    def extract_features(self) -> pd.DataFrame:
+        
+        # Agg daily events into 6H bins
+        rule = "6H"
+        wrapper_features = {comm.sms_count: {"resample_args": {"rule": rule}}}
 
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
@@ -87,9 +88,17 @@ class SmsProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .pipe(self.rename_time_columns)
             .reset_index()
         )
 
+        # Roll the dataframe based on frequency
+        if self.frequency == "14ds":
+            
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+        elif self.frequency == "7ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            
         return df
 
     def pivot(self, df):
@@ -98,11 +107,10 @@ class SmsProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date"],
+            index=["user", "date", "group"],
             columns="hour",
             values=["incoming_count", "outgoing_count"],
             fill_value=0,
         )
 
         return pivoted_df
-

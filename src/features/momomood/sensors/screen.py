@@ -5,7 +5,7 @@ import pandas as pd
 import niimpy.preprocessing.screen as screen
 from ....decorators import save_output_with_freq
 
-DATA_PATH = "data/interim/"
+DATA_PATH = "data/interim/momo/"
 
 
 @dataclass
@@ -19,19 +19,20 @@ class ScreenProcessor(BaseProcessor):
             add_group=self.group,
         )
 
-    @save_output_with_freq(DATA_PATH + "screen_binned.csv", "csv")
-    def extract_features(self, time_bin="15T") -> pd.DataFrame:
-        """
-        time_bin: resampling rate
-        """
+    @save_output_with_freq(DATA_PATH + "screen", "csv")
+    def extract_features(self) -> pd.DataFrame:
+
+        # Agg daily events into 6H bins
+        rule = "6H"
+        
         wrapper_features = {
             screen.screen_duration: {
                 "screen_column_name": "screen_status",
-                "resample_args": {"rule": time_bin},
+                "resample_args": {"rule": rule},
             },
             screen.screen_count: {
                 "screen_column_name": "screen_status",
-                "resample_args": {"rule": time_bin},
+                "resample_args": {"rule": rule},
             },
         }
 
@@ -54,9 +55,16 @@ class ScreenProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
+            .pipe(self.rename_time_columns)
             .reset_index()
         )
 
+        # Roll the dataframe based on frequency
+        if self.frequency == "14ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+        elif self.frequency == "7ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            
         return df
 
     def pivot(self, df):
@@ -69,12 +77,11 @@ class ScreenProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date"],
+            index=["user", "date", "group"],
             columns="hour",
             values=[
                 "screen_use_durationtotal",
                 "screen_off_durationtotal",
-                "screen_on_durationtotal",
                 "screen_on_durationtotal",
                 "screen_on_count",
                 "screen_off_count",
@@ -84,7 +91,3 @@ class ScreenProcessor(BaseProcessor):
         )
 
         return pivoted_df
-
-    def flatten_columns(self, df):
-        df.columns = ["_".join(col).strip() for col in df.columns.values]
-        return df
