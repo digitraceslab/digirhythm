@@ -12,7 +12,6 @@ DATA_PATH = "data/interim/momo/"
 class CallProcessor(BaseProcessor):
     @save_output_with_freq(DATA_PATH + f"calls", "csv")
     def extract_features(self) -> pd.DataFrame:
-        
         # Agg daily events into 6H bins
         rule = "6H"
 
@@ -38,7 +37,7 @@ class CallProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_time_columns)
+            .pipe(self.rename_feature_columns)
             .reset_index()
         )
 
@@ -72,7 +71,6 @@ class CallProcessor(BaseProcessor):
 class SmsProcessor(BaseProcessor):
     @save_output_with_freq(DATA_PATH + "sms", "csv")
     def extract_features(self) -> pd.DataFrame:
-        
         # Agg daily events into 6H bins
         rule = "6H"
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": rule}}}
@@ -88,17 +86,16 @@ class SmsProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_time_columns)
+            .pipe(self.rename_feature_columns)
             .reset_index()
         )
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            
             df = df.pipe(self.roll, groupby=["user", "group"], days=14)
         elif self.frequency == "7ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=7)
-            
+
         return df
 
     def pivot(self, df):

@@ -21,10 +21,9 @@ class ScreenProcessor(BaseProcessor):
 
     @save_output_with_freq(DATA_PATH + "screen", "csv")
     def extract_features(self) -> pd.DataFrame:
-
         # Agg daily events into 6H bins
         rule = "6H"
-        
+
         wrapper_features = {
             screen.screen_duration: {
                 "screen_column_name": "screen_status",
@@ -55,7 +54,7 @@ class ScreenProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_time_columns)
+            .pipe(self.rename_feature_columns)
             .reset_index()
         )
 
@@ -64,7 +63,7 @@ class ScreenProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=14)
         elif self.frequency == "7ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=7)
-            
+
         return df
 
     def pivot(self, df):

@@ -5,7 +5,7 @@ sys.path.append("../../../")
 import niimpy
 import pandas as pd
 from dataclasses import dataclass
-
+import numpy as np
 
 @dataclass
 class BaseProcessor:
@@ -34,6 +34,7 @@ class BaseProcessor:
 
     """
 
+    sensor_name: str
     path: str
     table: str
     group: str
@@ -95,15 +96,21 @@ class BaseProcessor:
 
     # Roll over past n days and sum up values
     def roll(self, df, groupby, days):
-        df = df.groupby(groupby).rolling(days, on="date").sum().reset_index()
-        df = df.drop('level_2', axis=1)  # Drop the 'level_2' column
+        
+        # Sort by date first
+        df = df.sort_values(['user', 'date'])
+        
+        df.set_index('date', inplace=True)
+        df = df.groupby(groupby).rolling(days).agg(['sum','min','max','mean','std']).reset_index()
+        #df = df.drop("level_2", axis=1)  # Drop the 'level_2' column
+
         return df
 
     def flatten_columns(self, df):
         df.columns = [":".join(col).strip() for col in df.columns.values]
         return df
-    
-    def rename_time_columns(self, df):
+
+    def rename_feature_columns(self, df):
         """
         Rename columns from time indicators to parts of the day.
 
@@ -115,21 +122,23 @@ class BaseProcessor:
         """
         # Mapping of time indicators to parts of the day
         time_mapping = {
-            ':00': ':night',
-            ':06': ':morning',
-            ':12': ':afternoon',
-            ':18': ':evening'
+            ":00": ":night",
+            ":06": ":morning",
+            ":12": ":afternoon",
+            ":18": ":evening",
         }
 
         # Rename columns based on the mapping
         for time_indicator, part_of_day in time_mapping.items():
-            df.columns = [col.replace(time_indicator, part_of_day) for col in df.columns]
+            df.columns = [
+                col.replace(time_indicator, part_of_day) for col in df.columns
+            ]
+            
+        # Append with sensor name
+        df.columns = [f"{self.sensor_name}:{col}" for col in df.columns]
 
         # Append suffix to indicate aggregation freq
-        if self.frequency != '4epochs':
-            df.columns = [f'{col}:{self.frequency}' for col in df.columns]
-        
+        if self.frequency != "4epochs":
+            df.columns = [f"{col}:{self.frequency}" for col in df.columns]
+
         return df
-
-
-        
