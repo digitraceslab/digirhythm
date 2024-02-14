@@ -7,6 +7,7 @@ import pandas as pd
 from dataclasses import dataclass
 import numpy as np
 
+
 @dataclass
 class BaseProcessor:
 
@@ -96,13 +97,17 @@ class BaseProcessor:
 
     # Roll over past n days and sum up values
     def roll(self, df, groupby, days):
-        
         # Sort by date first
-        df = df.sort_values(['user', 'date'])
-        
-        df.set_index('date', inplace=True)
-        df = df.groupby(groupby).rolling(days).agg(['sum','min','max','mean','std']).reset_index()
-        #df = df.drop("level_2", axis=1)  # Drop the 'level_2' column
+        df = df.sort_values(["user", "date"])
+
+        df.set_index("date", inplace=True)
+        df = (
+            df.groupby(groupby)
+            .rolling(days)
+            .agg(["sum", "min", "max", "mean", "std"])
+            .reset_index()
+        )
+        # df = df.drop("level_2", axis=1)  # Drop the 'level_2' column
 
         return df
 
@@ -121,7 +126,7 @@ class BaseProcessor:
         - DataFrame with renamed columns.
         """
         # Mapping of time indicators to parts of the day
-        time_mapping = {
+        segments = {
             ":00": ":night",
             ":06": ":morning",
             ":12": ":afternoon",
@@ -129,11 +134,9 @@ class BaseProcessor:
         }
 
         # Rename columns based on the mapping
-        for time_indicator, part_of_day in time_mapping.items():
-            df.columns = [
-                col.replace(time_indicator, part_of_day) for col in df.columns
-            ]
-            
+        for time_indicator, segment in segments.items():
+            df.columns = [col.replace(time_indicator, segment) for col in df.columns]
+
         # Append with sensor name
         df.columns = [f"{self.sensor_name}:{col}" for col in df.columns]
 

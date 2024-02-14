@@ -5,12 +5,9 @@ import pandas as pd
 import niimpy.preprocessing.location as location
 from ....decorators import save_output_with_freq
 
-DATA_PATH = "data/interim/momo/"
-
 
 @dataclass
 class LocationProcessor(BaseProcessor):
-    @save_output_with_freq(DATA_PATH + "location", "csv")
     def extract_features(self) -> pd.DataFrame:
         rule = "6H"
 

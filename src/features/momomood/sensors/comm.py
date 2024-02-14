@@ -10,7 +10,6 @@ DATA_PATH = "data/interim/momo/"
 
 @dataclass
 class CallProcessor(BaseProcessor):
-    @save_output_with_freq(DATA_PATH + f"calls", "csv")
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
@@ -69,7 +68,7 @@ class CallProcessor(BaseProcessor):
 
 
 class SmsProcessor(BaseProcessor):
-    @save_output_with_freq(DATA_PATH + "sms", "csv")
+    #    @save_output_with_freq(DATA_PATH + "sms", "csv")
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"

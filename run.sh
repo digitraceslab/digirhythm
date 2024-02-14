@@ -3,3 +3,6 @@ python3 -m src.features.momomood.sensors.run_processor processor.sensor=call pro
 
 # Vectorize stuffs
 python3 -m src.features.momomood.vectorize_momo
+
+# Compute similarity matrix
+python3 -m src.features.similarity_matrix
