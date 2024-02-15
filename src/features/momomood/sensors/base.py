@@ -107,7 +107,6 @@ class BaseProcessor:
             .agg(["sum", "min", "max", "mean", "std"])
             .reset_index()
         )
-        # df = df.drop("level_2", axis=1)  # Drop the 'level_2' column
 
         return df
 
