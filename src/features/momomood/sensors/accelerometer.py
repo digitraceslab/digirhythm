@@ -8,10 +8,10 @@ from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/momo/"
 
+
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
-    
-    def resample_data(self, df, rule='5H', agg_func='mean'):
+    def resample_data(self, df, rule="5H", agg_func="mean"):
         """
         Resample the DataFrame based on a given rule and aggregation function.
 
@@ -27,17 +27,21 @@ class AccelerometerProcessor(BaseProcessor):
         return df.groupby(["user", "device", "group"]).resample(rule).apply(agg_func)
 
     def rename_cols(self, df):
-        df.rename(columns={"double_values_0": "x", 
-                           "double_values_1": "y", 
-                           "double_values_2": "z"}, 
-                  errors="raise",
-                 inplace=True)
+        df.rename(
+            columns={
+                "double_values_0": "x",
+                "double_values_1": "y",
+                "double_values_2": "z",
+            },
+            errors="raise",
+            inplace=True,
+        )
         return df
-    
+
     def magnitude(self, df):
-        df['magnitude'] = np.sqrt(df["x"]**2 + df["y"]**2 + df["z"]**2)
+        df["magnitude"] = np.sqrt(df["x"] ** 2 + df["y"] ** 2 + df["z"] ** 2)
         return df
-    
+
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
@@ -50,7 +54,7 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.remove_timezone_info)
             .pipe(self.rename_cols)
             .pipe(self.magnitude)
-            .pipe(self.resample_data, rule, 'mean')
+            .pipe(self.resample_data, rule, "mean")
             .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
@@ -74,7 +78,6 @@ class AccelerometerProcessor(BaseProcessor):
         """
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
-
 
         # Pivot the table
         pivoted_df = df.pivot_table(

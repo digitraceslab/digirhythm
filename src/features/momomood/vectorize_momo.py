@@ -5,6 +5,7 @@ import os
 
 DATA_PATH = "data/processed/momo/"
 
+
 class VectorizeMoMo:
     def __init__(self, directory_path="data/interim/momo/"):
         self.directory_path = directory_path
@@ -16,20 +17,24 @@ class VectorizeMoMo:
         # Use glob to find all files in the directory
         files = glob.glob(os.path.join(self.directory_path, "*.csv"))
 
-         # Filter files containing '4epochs' in their names
-        filtered_files = [file for file in files if '4epochs' in os.path.basename(file)]
-        
+        # Filter files containing '4epochs' in their names
+        filtered_files = [file for file in files if "4epochs" in os.path.basename(file)]
+
         # Loop over files and merge DataFrames
         for file in filtered_files:
-            df = pd.read_csv(file, index_col=0)    
+            df = pd.read_csv(file, index_col=0)
 
             # If merged_df is not initialized, assign the first DataFrame to it
             if merged_df is None:
                 merged_df = df
             else:
                 # Merge the current DataFrame with the merged_df
-                merged_df = pd.merge(merged_df, df, on=merge_key, how="inner", )
-
+                merged_df = pd.merge(
+                    merged_df,
+                    df,
+                    on=merge_key,
+                    how="inner",
+                )
 
         return merged_df
 
@@ -40,15 +45,19 @@ vectorize_momo = VectorizeMoMo()
 # Load and merge DataFrames on a specified key
 merged_df = vectorize_momo.load_and_merge_dfs(merge_key=["user", "group", "date"])
 
-# Filter columns 
+# Filter columns
 # Filter columns using list comprehension
-prefixes = ('user','group','device','date','location', 'sms', 'call', 'screen')
+prefixes = ("user", "group", "device", "date", "location", "sms", "call", "screen")
 cols = [col for col in merged_df.columns if col.startswith(prefixes)]
 filtered_df = merged_df[cols]
 
 # Reduce dist total to km
 # Identify columns that start with 'location:dist_total'
-location_dist_columns = [col for col in filtered_df.columns if col.startswith(('location:dist_total', 'location:max_dist_home'))]
+location_dist_columns = [
+    col
+    for col in filtered_df.columns
+    if col.startswith(("location:dist_total", "location:max_dist_home"))
+]
 # Divide these columns by 1000
 filtered_df[location_dist_columns] = filtered_df[location_dist_columns] / 1000
 

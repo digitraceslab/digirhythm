@@ -12,6 +12,7 @@ groups = ["mmm-bpd", "mmm-mdd", "mmm-bd", "mmm-control"]
 
 DATA_PATH = "data/interim/momo/"
 
+
 @hydra.main(version_base=None, config_path="../../../../config", config_name="sensor")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
@@ -71,7 +72,7 @@ def main(cfg: DictConfig):
                 group=group,
                 frequency=frequency,
             )
-            
+
         elif sensor == "accelerometer":
             processor = AccelerometerProcessor(
                 sensor_name="accelerometer",
@@ -80,18 +81,18 @@ def main(cfg: DictConfig):
                 group=group,
                 frequency=frequency,
             )
-            
+
         else:
             raise ValueError(
                 "Invalid processor type. Please choose: acti, screen, sms, or call, or battery"
             )
-        
 
         data = processor.extract_features().reset_index()
         dfs.append(data)
 
     res = pd.concat(dfs)
     res.to_csv(f"{DATA_PATH}/{sensor}_{frequency}.csv", index=False)
-    
+
+
 if __name__ == "__main__":
     main()
