@@ -19,6 +19,7 @@ selected_features = [
     "location:dist_total:afternoon",
     "location:dist_total:evening",
     "location:dist_total:night",
+    
     # Call
     "call:incoming_count:morning",
     "call:incoming_count:afternoon",
@@ -36,6 +37,7 @@ selected_features = [
     "call:outgoing_duration_total:afternoon",
     "call:outgoing_duration_total:evening",
     "call:outgoing_duration_total:night",
+    
     # SMS
     "sms:incoming_count:morning",
     "sms:incoming_count:afternoon",
