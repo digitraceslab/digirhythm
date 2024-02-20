@@ -19,32 +19,44 @@ selected_features = [
     "location:dist_total:afternoon",
     "location:dist_total:evening",
     "location:dist_total:night",
+    
     # Call
-    "call:incoming_count:morning",
-    "call:incoming_count:afternoon",
-    "call:incoming_count:evening",
-    "call:incoming_count:night",
-    "call:outgoing_count:morning",
-    "call:outgoing_count:afternoon",
-    "call:outgoing_count:evening",
-    "call:outgoing_count:night",
-    "call:incoming_duration_total:morning",
-    "call:incoming_duration_total:afternoon",
-    "call:incoming_duration_total:evening",
-    "call:incoming_duration_total:night",
-    "call:outgoing_duration_total:morning",
-    "call:outgoing_duration_total:afternoon",
-    "call:outgoing_duration_total:evening",
-    "call:outgoing_duration_total:night",
+    "call:incoming_count:morning:norm",
+    "call:incoming_count:afternoon:norm",
+    "call:incoming_count:evening:norm",
+    "call:incoming_count:night:norm",
+    "call:incoming_count:sum",
+    
+    "call:outgoing_count:morning:norm",
+    "call:outgoing_count:afternoon:norm",
+    "call:outgoing_count:evening:norm",
+    "call:outgoing_count:night:norm",
+    "call:outgoing_count:sum",
+    
+    "call:incoming_duration_total:morning:norm",
+    "call:incoming_duration_total:afternoon:norm",
+    "call:incoming_duration_total:evening:norm",
+    "call:incoming_duration_total:night:norm",
+    "call:incoming_duration_total:sum",
+    
+    "call:outgoing_duration_total:morning:norm",
+    "call:outgoing_duration_total:afternoon:norm",
+    "call:outgoing_duration_total:evening:norm",
+    "call:outgoing_duration_total:night:norm",
+    "call:outgoing_duration_total:sum",
+    
     # SMS
-    "sms:incoming_count:morning",
-    "sms:incoming_count:afternoon",
-    "sms:incoming_count:evening",
-    "sms:incoming_count:night",
-    "sms:outgoing_count:morning",
-    "sms:outgoing_count:afternoon",
-    "sms:outgoing_count:evening",
-    "sms:outgoing_count:night",
+    "sms:incoming_count:morning:norm",
+    "sms:incoming_count:afternoon:norm",
+    "sms:incoming_count:evening:norm",
+    "sms:incoming_count:night:norm",
+    "sms:incoming_count:sum",
+    
+    "sms:outgoing_count:morning:norm",
+    "sms:outgoing_count:afternoon:norm",
+    "sms:outgoing_count:evening:norm",
+    "sms:outgoing_count:night:norm",
+    "sms:outgoing_count:sum",
 ]
 
 # Compute matrix for each user
@@ -55,10 +67,10 @@ for user in df.user.unique():
     #    date_range = pd.date_range(start=sample.index.min(), end=sample.index.max(), freq='D')
     #    sample = sample.reindex(date_range)
 
-    # Selecting the relevant features for cosine similarity calculation
+    # Selecting relevant features for similarity calculation
     sample = sample[selected_features]
     features = sample.values
-
+    
     # Compute the cosine similarity
     similarity = cosine_similarity(features)
 

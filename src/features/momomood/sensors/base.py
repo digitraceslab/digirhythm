@@ -157,24 +157,26 @@ class BaseProcessor:
         - pandas.DataFrame: The DataFrame with added normalized segment columns and sum columns for each of the base columns.
         """
 
-    # Define the time segments to be normalized
-    segments = [":night", ":morning", ":afternoon", ":evening"]
+        # Define the time segments to be normalized
+        segments = [":night", ":morning", ":afternoon", ":evening"]
 
-    # Loop through each base column specified in 'cols'
-    for col in cols:
-        # Generate the full column names for each segment
-        segment_cols = [f"{col}{segment}" for segment in segments]
+        # Loop through each base column specified in 'cols'
+        for col in cols:
+            # Generate the full column names for each segment
+            segment_cols = [f"{col}{segment}" for segment in segments]
 
-        # Create a new column name for storing the sum of segments
-        sum_col = f"{col}:sum"
+            # Create a new column name for storing the sum of segments
+            sum_col = f"{col}:sum"
 
-        # Calculate the sum of segment values for each row and store in the new column
-        df[sum_col] = df[segment_cols].sum(axis=1)
+            # Calculate the sum of segment values for each row and store in the new column
+            df[sum_col] = df[segment_cols].sum(axis=1)
 
-        # Generate column names for the normalized values
-        segment_cols_norm = [f"{col}:norm" for col in segment_cols]
+            # Generate column names for the normalized values
+            segment_cols_norm = [f"{col}:norm" for col in segment_cols]
 
-        # Normalize each segment value by dividing by the sum and store in new normalized columns
-        df[segment_cols_norm] = df[segment_cols].div(df[sum_col], axis=0)
+            # Normalize each segment value by dividing by the sum and store in new normalized columns
+            df[segment_cols_norm] = df[segment_cols].div(df[sum_col], axis=0)
 
-    return df
+            # Replace resulting NaN values with 0 
+            df[segment_cols_norm] = df[segment_cols_norm].fillna(0)
+        return df
