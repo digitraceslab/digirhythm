@@ -144,3 +144,37 @@ class BaseProcessor:
             df.columns = [f"{col}:{self.frequency}" for col in df.columns]
 
         return df
+
+    def normalize_segments(self, df, cols):
+        """
+        Normalizes specified segment columns within a DataFrame so that the sum of segments equals 1 for each row.
+
+        Parameters:
+        - df (pandas.DataFrame): The DataFrame containing the data to be normalized.
+        - cols (list of str): A list of base column names to be normalized across specified segments.
+
+        Returns:
+        - pandas.DataFrame: The DataFrame with added normalized segment columns and sum columns for each of the base columns.
+        """
+
+    # Define the time segments to be normalized
+    segments = [":night", ":morning", ":afternoon", ":evening"]
+
+    # Loop through each base column specified in 'cols'
+    for col in cols:
+        # Generate the full column names for each segment
+        segment_cols = [f"{col}{segment}" for segment in segments]
+
+        # Create a new column name for storing the sum of segments
+        sum_col = f"{col}:sum"
+
+        # Calculate the sum of segment values for each row and store in the new column
+        df[sum_col] = df[segment_cols].sum(axis=1)
+
+        # Generate column names for the normalized values
+        segment_cols_norm = [f"{col}:norm" for col in segment_cols]
+
+        # Normalize each segment value by dividing by the sum and store in new normalized columns
+        df[segment_cols_norm] = df[segment_cols].div(df[sum_col], axis=0)
+
+    return df

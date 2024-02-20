@@ -56,6 +56,17 @@ class ScreenProcessor(BaseProcessor):
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            .pipe(
+                self.normalize_segments,
+                cols=[
+                    "screen:screen_use_durationtotal",
+                    "screen:screen_off_durationtotal",
+                    "screen:screen_on_durationtotal",
+                    "screen:screen_on_count",
+                    "screen:screen_off_count",
+                    "screen:screen_use_count",
+                ],
+            )
         )
 
         # Roll the dataframe based on frequency
