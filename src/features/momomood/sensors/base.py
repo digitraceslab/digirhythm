@@ -162,21 +162,31 @@ class BaseProcessor:
 
         # Loop through each base column specified in 'cols'
         for col in cols:
-            # Generate the full column names for each segment
-            segment_cols = [f"{col}{segment}" for segment in segments]
-
             # Create a new column name for storing the sum of segments
             sum_col = f"{col}:sum"
 
+            # Ok, this code is dirty but I'll let it be
+            if self.frequency != "4epochs":
+                # Generate the full column names for each segment
+                segment_cols = [
+                    f"{col}{segment}:{self.frequency}" for segment in segments
+                ]
+                segment_df = (
+                    df[segment_cols].xs("sum", axis=1, level=1, drop_level=False).copy()
+                )
+            else:
+                segment_cols = [f"{col}{segment}" for segment in segments]
+                segment_df = df[segment_cols].copy()
+
             # Calculate the sum of segment values for each row and store in the new column
-            df[sum_col] = df[segment_cols].sum(axis=1)
+            df[sum_col] = segment_df.sum(axis=1)
 
             # Generate column names for the normalized values
             segment_cols_norm = [f"{col}:norm" for col in segment_cols]
 
             # Normalize each segment value by dividing by the sum and store in new normalized columns
-            df[segment_cols_norm] = df[segment_cols].div(df[sum_col], axis=0)
+            df[segment_cols_norm] = segment_df.div(df[sum_col], axis=0)
 
-            # Replace resulting NaN values with 0 
+            # Replace resulting NaN values with 0
             df[segment_cols_norm] = df[segment_cols_norm].fillna(0)
         return df

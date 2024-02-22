@@ -6,6 +6,7 @@ import sys
 np.set_printoptions(threshold=sys.maxsize)
 
 DATA_PATH = "data/processed/momo/similarity_matrix/"
+
 fp = "data/processed/momo/vector_momo.pkl"
 df = pd.read_pickle(fp)
 
@@ -19,39 +20,33 @@ selected_features = [
     "location:dist_total:afternoon",
     "location:dist_total:evening",
     "location:dist_total:night",
-    
     # Call
     "call:incoming_count:morning:norm",
     "call:incoming_count:afternoon:norm",
     "call:incoming_count:evening:norm",
     "call:incoming_count:night:norm",
     "call:incoming_count:sum",
-    
     "call:outgoing_count:morning:norm",
     "call:outgoing_count:afternoon:norm",
     "call:outgoing_count:evening:norm",
     "call:outgoing_count:night:norm",
     "call:outgoing_count:sum",
-    
     "call:incoming_duration_total:morning:norm",
     "call:incoming_duration_total:afternoon:norm",
     "call:incoming_duration_total:evening:norm",
     "call:incoming_duration_total:night:norm",
     "call:incoming_duration_total:sum",
-    
     "call:outgoing_duration_total:morning:norm",
     "call:outgoing_duration_total:afternoon:norm",
     "call:outgoing_duration_total:evening:norm",
     "call:outgoing_duration_total:night:norm",
     "call:outgoing_duration_total:sum",
-    
     # SMS
     "sms:incoming_count:morning:norm",
     "sms:incoming_count:afternoon:norm",
     "sms:incoming_count:evening:norm",
     "sms:incoming_count:night:norm",
     "sms:incoming_count:sum",
-    
     "sms:outgoing_count:morning:norm",
     "sms:outgoing_count:afternoon:norm",
     "sms:outgoing_count:evening:norm",
@@ -70,7 +65,7 @@ for user in df.user.unique():
     # Selecting relevant features for similarity calculation
     sample = sample[selected_features]
     features = sample.values
-    
+
     # Compute the cosine similarity
     similarity = cosine_similarity(features)
 

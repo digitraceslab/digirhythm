@@ -8,10 +8,12 @@ from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/momo/"
 
+G = 9.8
+
 
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
-    def resample_data(self, df, rule="5H", agg_func="mean"):
+    def resample_data(self, df, rule="6H", agg_dict=[]):
         """
         Resample the DataFrame based on a given rule and aggregation function.
 
@@ -24,7 +26,12 @@ class AccelerometerProcessor(BaseProcessor):
         - Resampled pandas DataFrame.
         """
 
-        return df.groupby(["user", "device", "group"]).resample(rule).apply(agg_func)
+        res = df.groupby(["user", "device", "group"]).resample(rule).agg(agg_dict)
+
+        res.columns = ["_".join(col).strip() for col in res.columns.values]
+        res.reset_index(inplace=True)
+
+        return res
 
     def rename_cols(self, df):
         df.rename(
@@ -42,10 +49,21 @@ class AccelerometerProcessor(BaseProcessor):
         df["magnitude"] = np.sqrt(df["x"] ** 2 + df["y"] ** 2 + df["z"] ** 2)
         return df
 
+    def filter_outliers(self, df):
+        df = df[df["magnitude"] < 2 * G]
+        return df
+
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
 
+        # Define your aggregation dictionary
+        agg_dict = {
+            "x": ["mean", "std", "median"],
+            "y": ["mean", "std", "median"],
+            "z": ["mean", "std", "median"],
+            "magnitude": ["mean", "std", "median"],
+        }
         # self.data.index.name = 'datetime'
         self.data = self.data.sort_index()
         df = (
@@ -54,7 +72,8 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.remove_timezone_info)
             .pipe(self.rename_cols)
             .pipe(self.magnitude)
-            .pipe(self.resample_data, rule, "mean")
+            .pipe(self.filter_outliers)
+            .pipe(self.resample_data, rule, agg_dict)
             .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
@@ -76,6 +95,8 @@ class AccelerometerProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
+
+        print(df.columns)
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
@@ -83,7 +104,20 @@ class AccelerometerProcessor(BaseProcessor):
         pivoted_df = df.pivot_table(
             index=["user", "date", "group"],
             columns="hour",
-            values=["magnitude"],
+            values=[
+                "x_mean",
+                "x_median",
+                "x_std",
+                "y_mean",
+                "y_median",
+                "y_std",
+                "z_mean",
+                "z_median",
+                "z_std",
+                "magnitude_mean",
+                "magnitude_median",
+                "magnitude_std",
+            ],
             fill_value=0,
         )
 

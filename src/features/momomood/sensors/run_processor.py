@@ -84,7 +84,7 @@ def main(cfg: DictConfig):
 
         else:
             raise ValueError(
-                "Invalid processor type. Please choose: acti, screen, sms, or call, or battery"
+                "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer]"
             )
 
         data = processor.extract_features().reset_index()

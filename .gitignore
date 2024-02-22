@@ -36,6 +36,9 @@ niimpy/
 pip-log.txt
 pip-delete-this-directory.txt
 
+# Path folder
+config/paths
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
