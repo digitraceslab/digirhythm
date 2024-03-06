@@ -10,7 +10,6 @@ DATA_PATH = "data/interim/momo/"
 
 G = 9.8
 
-
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
     def resample_data(self, df, rule="6H", agg_dict=[]):
@@ -84,9 +83,13 @@ class AccelerometerProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+                self.flatten_columns
+            )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
 
         return df
 
@@ -96,7 +99,6 @@ class AccelerometerProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        print(df.columns)
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 

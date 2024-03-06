@@ -105,13 +105,19 @@ class BaseProcessor:
             df.groupby(groupby)
             .rolling(days)
             .agg(["sum", "min", "max", "mean", "std"])
-            .reset_index()
         )
 
         return df
 
     def flatten_columns(self, df):
-        df.columns = [":".join(col).strip() for col in df.columns.values]
+        """
+        Flatten columns if they are 2-level
+        """
+
+        df.columns = [
+            ":".join(col).strip() for col in df.columns.values
+        ]
+
         return df
 
     def rename_feature_columns(self, df):
@@ -163,17 +169,17 @@ class BaseProcessor:
         # Loop through each base column specified in 'cols'
         for col in cols:
             # Create a new column name for storing the sum of segments
-            sum_col = f"{col}:sum"
+            sum_col = f"{col}:total"
 
             # Ok, this code is dirty but I'll let it be
             if self.frequency != "4epochs":
                 # Generate the full column names for each segment
                 segment_cols = [
-                    f"{col}{segment}:{self.frequency}" for segment in segments
+                    f"{col}{segment}:{self.frequency}:sum" for segment in segments
                 ]
-                segment_df = (
-                    df[segment_cols].xs("sum", axis=1, level=1, drop_level=False).copy()
-                )
+                segment_df = df[segment_cols].copy()
+            #                    df[segment_cols].xs("sum", axis=1, level=1, drop_level=False).copy()
+
             else:
                 segment_cols = [f"{col}{segment}" for segment in segments]
                 segment_df = df[segment_cols].copy()

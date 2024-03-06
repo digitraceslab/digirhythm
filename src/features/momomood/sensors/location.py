@@ -63,9 +63,9 @@ class LocationProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(self.flatten_columns)
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(self.flatten_columns)
 
         return df
 

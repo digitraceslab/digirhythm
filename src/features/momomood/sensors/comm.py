@@ -42,9 +42,13 @@ class CallProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+                self.flatten_columns
+            )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
 
         # Normalize segmented features
         df = df.pipe(
@@ -75,6 +79,7 @@ class CallProcessor(BaseProcessor):
             fill_value=0,
         )
 
+        print(pivoted_df)
         return pivoted_df
 
 
@@ -102,9 +107,13 @@ class SmsProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+                self.flatten_columns
+            )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7)
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
 
         # Normalize segmented features
         df = df.pipe(

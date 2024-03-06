@@ -51,7 +51,7 @@ Process the sensor data at a predetermined frequency. This step involves running
 python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
 ```
 
-Replace `processor.sensor=call` with the sensor you want to process (e.g., `sms`, `location`) and `processor.frequency=4epochs` with the desired frequency.
+Replace `processor.sensor=call` with the sensor you want to process (e.g., `sms`, `location`) and `processor.frequency=4epochs` with the desired frequency (e.g., `7ds`, `14ds`).
 
 ### 2. Vectorize Features
 
