@@ -1,3 +1,0 @@
-processor:
-    sensor: call # possible sensor: sms, call
-    frequency: 4epochs # possible values: 4epochs, daily, 2wks

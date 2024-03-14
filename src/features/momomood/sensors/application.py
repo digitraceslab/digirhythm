@@ -8,7 +8,9 @@ from ....decorators import save_output_with_freq
 DATA_PATH = "data/interim/momo/"
 
 import warnings
+
 warnings.filterwarnings("ignore")
+
 
 @dataclass
 class ApplicationProcessor(BaseProcessor):
@@ -28,12 +30,11 @@ class ApplicationProcessor(BaseProcessor):
         )
 
     def extract_features(self) -> pd.DataFrame:
-
         def _convert_timezone(df):
-            df.index = df.index.tz_convert('UTC')
-            df.index = df.index.tz_convert('Europe/Helsinki')
+            df.index = df.index.tz_convert("UTC")
+            df.index = df.index.tz_convert("Europe/Helsinki")
             return df
-        
+
         rule = "6H"
 
         features = {
@@ -48,7 +49,6 @@ class ApplicationProcessor(BaseProcessor):
             },
         }
 
-
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -59,7 +59,6 @@ class ApplicationProcessor(BaseProcessor):
                 self.screen_data,
                 features=features,
             )  # call niimpy to extract features with pre-defined time bin
-
             .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
@@ -67,7 +66,6 @@ class ApplicationProcessor(BaseProcessor):
             .pipe(self.rename_feature_columns)
             .reset_index()
         )
-    
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
@@ -82,11 +80,9 @@ class ApplicationProcessor(BaseProcessor):
         # Normalize segemented features
         df = df.pipe(
             self.normalize_segments,
-            cols=[
-                ""
-            ],
+            cols=[""],
         )
-        
+
         return df
 
     def pivot(self, df):
@@ -101,12 +97,10 @@ class ApplicationProcessor(BaseProcessor):
         pivoted_df = df.pivot_table(
             index=["user", "date", "group"],
             columns=["app_group", "hour"],
-            values=[
-                "count", "duration"
-            ],
+            values=["count", "duration"],
             fill_value=0,
         )
 
         print(pivoted_df.head(10))
-        
+
         return pivoted_df

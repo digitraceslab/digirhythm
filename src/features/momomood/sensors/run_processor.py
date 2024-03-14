@@ -92,7 +92,7 @@ def main(cfg: DictConfig):
                 group=group,
                 frequency=frequency,
             )
-        
+
         else:
             raise ValueError(
                 "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer]"
