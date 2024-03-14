@@ -29,7 +29,7 @@ class VectorizeMoMo:
         # Loop over files and merge DataFrames
         for file in filtered_files:
             df = pd.read_csv(file, index_col=0)
-            
+
             # If merged_df is not initialized, assign the first DataFrame to it
             if merged_df is None:
                 merged_df = df
@@ -45,9 +45,7 @@ class VectorizeMoMo:
         return merged_df
 
 
-@hydra.main(
-    version_base=None, config_path="../../../config", config_name="config"
-)
+@hydra.main(version_base=None, config_path="../../../config", config_name="config")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
@@ -58,7 +56,7 @@ def main(cfg: DictConfig):
 
     # Load and merge DataFrames on a specified key
     merged_df = vectorize_momo.load_and_merge_dfs(merge_key=["user", "group", "date"])
-    
+
     # Filter columns
     prefixes = ("user", "group", "device", "date", "location", "sms", "call", "screen")
     cols = [col for col in merged_df.columns if col.startswith(prefixes)]
@@ -74,7 +72,6 @@ def main(cfg: DictConfig):
     # Get distance in kilometers
     filtered_df[location_dist_columns] = filtered_df[location_dist_columns] / 1000
 
-    
     # Now, merged_df contains all data merged from the files based on the merge_key
     filtered_df.to_csv(DATA_PATH + f"vector_momo_{frequency}.csv")
     filtered_df.to_pickle(DATA_PATH + f"vector_momo_{frequency}.pkl")

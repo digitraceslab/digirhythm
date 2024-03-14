@@ -86,40 +86,39 @@ def similarity_against_baseline(features_df, baseline):
     return res
 
 
-
-@hydra.main(
-    version_base=None, config_path="../../config", config_name="config"
-)
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     frequency = cfg.baseline_rhythm.frequency
-    #features = cfg.baseline_rhythm.features
+    # features = cfg.baseline_rhythm.features
     kernel_size = cfg.baseline_rhythm.kernel_size
 
-
     fp = f"data/processed/momo/vector_momo_{frequency}.csv"
-    
+
     features_df = pd.read_csv(fp)
     features_df.dropna(inplace=True)
 
     # Regex pattern to match strings starting with 'call' or 'sms' and ending with 'norm' or 'sum'
-    pattern = r'^(call|sms).*:(norm|total)$' 
+    if frequency == '4epochs':
+        pattern = r"^(call|sms)"
+    else:
+        pattern = r"^(call|sms).*:(norm|total)$"
     # Filtering the list
     features = [f for f in features_df.columns if re.match(pattern, f)]
-    print(features)
+    print(features_df[features])
 
     res = {}
     for uid in features_df.user.unique():
         sample = features_df[features_df.user == uid][features]
-        
+
         sm = similarity_matrix(sample, uid)
 
         if is_sufficient_data(sm, kernel_size) == False:
             continue
 
         # Save to csv
-        sm.to_csv(DATA_PATH + f"similarity_{uid}.csv")
+        sm.to_csv(DATA_PATH + f"{frequency}/similarity_{uid}.csv")
 
         si_score = stability_score(sm, kernel_size)
         si_max = largest_stability_score(si_score)
@@ -134,6 +133,6 @@ def main(cfg: DictConfig):
     res_df = pd.DataFrame.from_dict(res, orient="index")
     res_df.to_csv(DATA_PATH + f"similarity_baseline_{frequency}.csv")
 
+
 if __name__ == "__main__":
     main()
-

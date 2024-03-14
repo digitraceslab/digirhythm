@@ -1,0 +1,16 @@
+corona:
+    sensor: activity # possible sensor: activity
+    frequency: 4epochs # possible values: 4epochs, daily, 2wks
+    
+processor:
+    sensor: call # possible sensor: sms, call
+    frequency: 4epochs # possible values: 4epochs, daily, 2wks
+
+vectorize:
+    sensor: call # possible sensor: sms, call
+    frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
+
+baseline_rhythm:
+    features: call, sms
+    frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
+    kernel_size: 7 # kernel window to compute baseline 
