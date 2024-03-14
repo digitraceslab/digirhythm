@@ -45,6 +45,8 @@ class BaseProcessor:
     # Optional var
     batt_path: str = ""
     batt_data: pd.DataFrame = pd.DataFrame()
+    screen_path: str = ""
+    screen_data: pd.DataFrame = pd.DataFrame()
 
     def __post_init__(self) -> None:
         self.data = niimpy.read_sqlite(
@@ -66,26 +68,23 @@ class BaseProcessor:
         data = data.drop_duplicates(["user", "datetime"])
         return data
 
-    def remove_first_last_day(self, data: pd.DataFrame):
-        """
-        Remove first and last day of data to avoid incomplete data collection
-        """
-        grouped = data.groupby(["user", "device", "group"])
-        if len(grouped) <= 1:  # If there's only one day of data for the user, remove it
-            return pd.DataFrame()
-        else:
-            res = (
-                grouped.apply(
-                    lambda x: x[
-                        (x.index.date > x.index.min().date())
-                        & (x.index.date < x.index.max().date())
-                    ]
-                )
-                .reset_index(drop=True)
-                .set_index("datetime")
-            )
+    def remove_first_last_day(self, df):
+        # Function to filter out the first and last day for each group
+        def filter_days(group):
+            # Determine the first and last day
+            first_day = group.index.min().floor("D")
+            last_day = group.index.max().floor("D")
 
-            return res
+            # Exclude rows from the first and last day
+            return group[
+                (group.index.floor("D") > first_day)
+                & (group.index.floor("D") < last_day)
+            ]
+
+        # Group by 'user' and 'device' and apply the filter_days function
+        return df.groupby(["user", "device", "group"], group_keys=False).apply(
+            filter_days
+        )
 
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
@@ -101,11 +100,7 @@ class BaseProcessor:
         df = df.sort_values(["user", "date"])
 
         df.set_index("date", inplace=True)
-        df = (
-            df.groupby(groupby)
-            .rolling(days)
-            .agg(["sum", "min", "max", "mean", "std"])
-        )
+        df = df.groupby(groupby).rolling(days).agg(["sum", "min", "max", "mean", "std"])
 
         return df
 
@@ -114,9 +109,7 @@ class BaseProcessor:
         Flatten columns if they are 2-level
         """
 
-        df.columns = [
-            ":".join(col).strip() for col in df.columns.values
-        ]
+        df.columns = [":".join(col).strip() for col in df.columns.values]
 
         return df
 

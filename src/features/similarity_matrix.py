@@ -20,6 +20,8 @@ selected_features = [
     "location:dist_total:afternoon",
     "location:dist_total:evening",
     "location:dist_total:night",
+
+    
     # Call
     "call:incoming_count:morning:norm",
     "call:incoming_count:afternoon:norm",

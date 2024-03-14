@@ -4,7 +4,8 @@ from .screen import *
 from .actigraph import *
 from .location import *
 from .battery import *
-from .accelerometer import *
+from .accelerometer import AccelerometerProcessor
+from .application import ApplicationProcessor
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -81,7 +82,17 @@ def main(cfg: DictConfig):
                 group=group,
                 frequency=frequency,
             )
-
+        elif sensor == "application":
+            processor = ApplicationProcessor(
+                sensor_name="application",
+                path=PATHS[group]["awareapplicationforeground"],
+                batt_path=PATHS[group]["awarebattery"],
+                screen_path=PATHS[group]["awarescreen"],
+                table="AwareApplicationForeground",
+                group=group,
+                frequency=frequency,
+            )
+        
         else:
             raise ValueError(
                 "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer]"

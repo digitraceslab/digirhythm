@@ -10,6 +10,7 @@ DATA_PATH = "data/interim/momo/"
 
 G = 9.8
 
+
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
     def resample_data(self, df, rule="6H", agg_dict=[]):
