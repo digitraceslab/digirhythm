@@ -6,11 +6,10 @@ from datetime import datetime
 
 DATA_PATH = "data/interim/corona/"
 
+
 @dataclass
 class HRVProcessor(BaseCoronaProcessor):
-
     def extract_features(self) -> pd.DataFrame:
-      
         df = self.data.copy()
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":

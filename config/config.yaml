@@ -1,9 +1,9 @@
 corona:
-    sensor: activity # possible sensor: activity
+    sensor: activity # possible sensor: activity, sleep, hrv
     frequency: 4epochs # possible values: 4epochs, daily, 2wks
     
 processor:
-    sensor: call # possible sensor: sms, call
+    sensor: call # possible sensor: sms, call, location, screen, actigraphy, accelerometer
     frequency: 4epochs # possible values: 4epochs, daily, 2wks
 
 vectorize:
