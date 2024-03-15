@@ -1,6 +1,9 @@
 
 # Digi Rhythm: inferring daily rhythm from digital traces
 
+## Description
+Placeholer for short description
+
 Project Organization
 ------------
 
@@ -11,7 +14,7 @@ Project Organization
     │
     ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
     │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
+    ├── analysis          <- Jupyter notebooks. Naming convention is a number (for ordering),
     │                         the creator's initials, and a short `-` delimited description, e.g.
     │                         `1.0-jqp-initial-data-exploration`.
     │
@@ -35,6 +38,20 @@ Project Organization
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
 --------
+
+
+## Setup
+
+### Requirements
+Requires Python 3.10 or higher.
+Install requirements:
+`python3 -m pip install -r requirements.txt`
+
+### Config file
+
+Paths in config file are placeholder. Replace with the actual paths to the data...
+Copy `config/paths/config.ini.sample` as `config/paths/config.ini` and replace the paths accordingly
+
 # MoMoMood Data Analysis Pipeline
 
 This section provides instructions for executing the data analysis pipeline for the MoMoMood project, which includes processing sensor data, vectorizing features, and computing similarity matrices. Additionally, a utility script for folder backup is also provided.

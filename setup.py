@@ -8,3 +8,5 @@ setup(
     author="lnknguyen",
     license="MIT",
 )
+
+# Remove probably, or switch to .toml
