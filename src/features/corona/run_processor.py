@@ -1,6 +1,8 @@
 from config import PATHS
 from .activity import ActivityProcessor
 from .sleep import SleepProcessor
+from .hrv import HRVProcessor
+
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -24,6 +26,12 @@ def main(cfg: DictConfig):
         processor = SleepProcessor(
             sensor_name="sleep",
             path=PATHS["corona"]["sleep"],
+            frequency=frequency,
+        )
+    elif sensor == "hrv":
+        processor = HRVProcessor(
+            sensor_name="hrv",
+            path=PATHS["corona"]["nightly_recharge_summary"],
             frequency=frequency,
         )
     else:
