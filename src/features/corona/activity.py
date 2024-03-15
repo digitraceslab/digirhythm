@@ -8,28 +8,30 @@ DATA_PATH = "data/interim/corona/"
 
 @dataclass
 class ActivityProcessor(BaseCoronaProcessor):
-    
-    # proper name after 
+    # proper name after
     def set_datetime_index(self, df):
-        
-        df['datetime'] = df['date'] + ' ' + df['time']
-        df['datetime'] = pd.to_datetime(df['datetime'])
-        
+        df["datetime"] = df["date"] + " " + df["time"]
+        df["datetime"] = pd.to_datetime(df["datetime"])
+
         # Set 'datetime' as the index
-        df = df.set_index('datetime')
+        df = df.set_index("datetime")
         return df
-    
+
     def resample(self, df, rule):
-        
         # Group by 'subject_id' and then resample by 6-hour intervals, summing the steps
-        resampled_df = df.groupby(['subject_id', 'date']).resample('6H')['steps'].sum().reset_index()
+        resampled_df = (
+            df.groupby(["subject_id", "date"])
+            .resample("6H")["steps"]
+            .sum()
+            .reset_index()
+        )
 
         return resampled_df
-    
+
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
-    
+
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -61,14 +63,12 @@ class ActivityProcessor(BaseCoronaProcessor):
 
     def pivot(self, df):
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
-        
+
         # Pivot the table
         pivoted_df = df.pivot_table(
             index=["subject_id", "date"],
             columns="hour",
-            values=[
-                "steps"
-            ],
+            values=["steps"],
             fill_value=0,
         )
 

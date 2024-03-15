@@ -40,7 +40,7 @@ class BaseCoronaProcessor:
 
     def __post_init__(self) -> None:
         self.data = pd.read_csv(self.path)
-        
+
     def extract_features(self) -> pd.DataFrame:
         """
         Extract features based on the specified frequency.
@@ -60,20 +60,14 @@ class BaseCoronaProcessor:
         # Function to filter out the first and last day for each group
         def filter_days(group):
             # Determine the first and last day
-            first_day = group['date'].min()
-            last_day = group['date'].max()
+            first_day = group["date"].min()
+            last_day = group["date"].max()
 
             # Exclude rows from the first and last day
-            return group[
-                (group['date'] > first_day)
-                & (group['date'] < last_day)
-            ]
+            return group[(group["date"] > first_day) & (group["date"] < last_day)]
 
         # Group by 'user' and 'device' and apply the filter_days function
-        return df.groupby(["subject_id"], group_keys=False).apply(
-            filter_days
-        )
-
+        return df.groupby(["subject_id"], group_keys=False).apply(filter_days)
 
     # Roll over past n days and sum up values
     def roll(self, df, groupby, days):
@@ -111,11 +105,11 @@ class BaseCoronaProcessor:
             ":12": ":afternoon",
             ":18": ":evening",
         }
-        
+
         # Rename columns based on the mapping
         for time_indicator, segment in segments.items():
             df.columns = [col.replace(time_indicator, segment) for col in df.columns]
-        
+
         # Append suffix to indicate aggregation freq
         if self.frequency != "4epochs":
             df.columns = [f"{col}:{self.frequency}" for col in df.columns]

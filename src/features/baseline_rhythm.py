@@ -100,7 +100,7 @@ def main(cfg: DictConfig):
     features_df.dropna(inplace=True)
 
     # Regex pattern to match strings starting with 'call' or 'sms' and ending with 'norm' or 'sum'
-    if frequency == '4epochs':
+    if frequency == "4epochs":
         pattern = r"^(call|sms)"
     else:
         pattern = r"^(call|sms).*:(norm|total)$"
