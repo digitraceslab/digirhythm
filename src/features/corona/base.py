@@ -116,6 +116,16 @@ class BaseCoronaProcessor:
 
         return df
 
+    def normalize_features(self, df, cols):
+        # Normalize specified features per user and create new columns
+
+        for feature in cols:
+            df[f"{feature}:norm"] = df.groupby("subject_id")[feature].transform(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            )
+
+        return df
+
     def normalize_segments(self, df, cols):
         """
         Normalizes specified segment columns within a DataFrame so that the sum of segments equals 1 for each row.

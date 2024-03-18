@@ -14,3 +14,4 @@ baseline_rhythm:
     features: call, sms
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
     kernel_size: 7 # kernel window to compute baseline 
+    method: si # method to compute baseline rhythm, possible values: si, average, cluster

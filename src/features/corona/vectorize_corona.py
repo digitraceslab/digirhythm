@@ -28,9 +28,9 @@ class VectorizeCorona:
 
         # Loop over files and merge DataFrames
         for file in filtered_files:
+
             df = pd.read_csv(file, index_col=0)
 
-            # If merged_df is not initialized, assign the first DataFrame to it
             if merged_df is None:
                 merged_df = df
             else:

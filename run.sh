@@ -5,9 +5,11 @@ python3 -m src.features.corona.run_processor corona.sensor=activity corona.frequ
 
 # 2. Vectorize stuffs
 python3 -m src.features.momomood.vectorize_momo
+python3 -m src.features.corona.vectorize_corona vectorize.frequency=4epochs,7ds,14ds --multirun
 
-# 3. Compute similarity matrix
-python3 -m src.features.similarity_matrix
+# 3. Compute baseline rhythm
+python3 -m src.features.baseline_rhythm
+python3 -m src.features.corona.baseline_rhythm
 
 ### Util script
 # Folder backup

@@ -78,6 +78,7 @@ class SleepProcessor(BaseCoronaProcessor):
             .pipe(self.midsleep)
             .pipe(self.filter_nights)
             .pipe(self.retain_columns)
+            .pipe(self.normalize_features, ['tst', 'midsleep'])
         )
 
         # Roll the dataframe based on frequency
