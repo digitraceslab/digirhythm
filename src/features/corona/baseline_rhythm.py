@@ -20,7 +20,7 @@ DATA_PATH = "data/processed/corona/similarity_matrix/"
 
 def euclidean_similarity(values):
     d = euclidean_distances(values)
-    return 1 / (1 + d)  # np.exp(-d)
+    return 1 / (1 + d)  
 
 
 def similarity_matrix(sample, uid):
@@ -43,6 +43,7 @@ def similarity_matrix(sample, uid):
 def is_sufficient_data(similarity_matrix, kernel_size):
     return similarity_matrix.shape[0] >= kernel_size * 2
 
+#### STABILITY SCORE
 def stability_score(similarity_matrix, kernel_size=7):
     size = similarity_matrix.shape[0] - kernel_size - 1
 
@@ -57,7 +58,6 @@ def stability_score(similarity_matrix, kernel_size=7):
         stability_scores.append(np.median(kernel))
     # Slide
     return stability_scores
-
 
 def largest_stability_score(stability_score):
     if len(stability_score) == 0:
@@ -74,7 +74,7 @@ def calculate_baseline_si(df, si_max, kernel_size):
 
     return baseline
 
-
+#### AVERAGE BASELINE
 def calculate_baseline_avg(df):
     """
     Average the aggregate values of all things
@@ -82,33 +82,33 @@ def calculate_baseline_avg(df):
 
     return df.mean(axis=0)
 
+#### CLUSTERING BASELINE
 def calculate_baseline_clustering(df):
-
     res = df.copy()
-    
+
     # Perform hierarchical clustering
-    linked = linkage(res, 'ward')
-    
+    linked = linkage(res, "ward")
+
     k = 2
-    clusters = fcluster(linked, k, criterion='maxclust')
+    clusters = fcluster(linked, k, criterion="maxclust")
 
     # Assign cluster labels to the original dataframe
-    res['cluster_label'] = clusters
+    res["cluster_label"] = clusters
 
     # Calculating the centroids
-    centroids = res.groupby('cluster_label').mean()
-    
+    centroids = res.groupby("cluster_label").mean()
+
     # Determine the size of each cluster
-    cluster_sizes = res['cluster_label'].value_counts()
+    cluster_sizes = res["cluster_label"].value_counts()
 
     # Find the label of the largest cluster
     largest_cluster_label = cluster_sizes.idxmax()
 
     # Find the centroid of the largest cluster
     baseline = centroids.loc[largest_cluster_label]
-    
-    # Remove the 'cluster_label' column from the original dataframe
-    baseline = baseline.drop(columns=['cluster_label'])
+
+    # Remove 'cluster_label' column from the original dataframe
+    baseline = baseline.drop(columns=["cluster_label"])
 
     return baseline
 
@@ -126,14 +126,31 @@ def similarity_against_baseline(features_df, baseline):
     return res
 
 
-FEATURES = ["heart_rate_variability_avg:norm","stepsx1000:total:norm","steps:night:norm","steps:morning:norm","steps:afternoon:norm","steps:evening:norm","tst:norm","midsleep:norm"]
+FEATURES = [
+    "heart_rate_variability_avg:norm",
+    "stepsx1000:total:norm",
+    "steps:night:norm",
+    "steps:morning:norm",
+    "steps:afternoon:norm",
+    "steps:evening:norm",
+    "tst:norm",
+    "midsleep:norm",
+]
 
-#FEATURES = ["stepsx1000:total"]
+# FEATURES = ["stepsx1000:total"]
 
-FEATURES_7DS = ["steps:night:7ds:sum:norm","steps:morning:7ds:sum:norm","steps:afternoon:7ds:sum:norm","steps:evening:7ds:sum:norm","tst:norm:mean", "midsleep:norm:mean","heart_rate_variability_avg:mean:norm"]
+FEATURES_7DS = [
+    "steps:night:7ds:sum:norm",
+    "steps:morning:7ds:sum:norm",
+    "steps:afternoon:7ds:sum:norm",
+    "steps:evening:7ds:sum:norm",
+    "tst:norm:mean",
+    "midsleep:norm:mean",
+    "heart_rate_variability_avg:mean:norm",
+]
 
 
-#FEATURES_7DS = ["tst:mean", "midsleep:mean"]
+# FEATURES_7DS = ["tst:mean", "midsleep:mean"]
 
 FEATURES_14DS = [
     "steps:night:14ds:sum:norm",
@@ -187,13 +204,13 @@ def main(cfg: DictConfig):
         si_score = stability_score(sm, kernel_size)
         si_max = largest_stability_score(si_score)
 
-        if method == 'si':
+        if method == "si":
             baseline = calculate_baseline_si(sample, si_max, kernel_size)
-        elif method == 'cluster':
+        elif method == "cluster":
             baseline = calculate_baseline_clustering(sample)
-        elif method == 'average':
+        elif method == "average":
             baseline = calculate_baseline_avg(sample)
-            
+
         similarity_baseline = similarity_against_baseline(sample, baseline)
 
         res[uid] = similarity_baseline
