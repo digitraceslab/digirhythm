@@ -8,11 +8,12 @@ Project Organization
 ------------
 
     ├── README.md          <- The top-level README for developers using this project.
+    │    
+    ├── run.sh          <- Scripts to produce the data and generate similarity matrix
     ├── data
     │   ├── interim        <- Intermediate data that has been transformed.
     │   ├── processed      <- The final, canonical data sets for modeling.
     │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
     │
     ├── analysis          <- Jupyter notebooks.
     │
@@ -20,13 +21,15 @@ Project Organization
     │                         generated with `pip freeze > requirements.txt`
     │
     ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
+    │   ├── features       
+    │   │
     │   │   └── corona     <- Process script for corona study
+    │   │   └────── vectorize_corona.py    <- Combine individual sensors into one vector
+    │   │
     │   │   └── momomood     <- Process script for momomood study
-    │
+    │   │   └────── vectorize_momo    <- Combine individual sensors into one vector
+    │   │
+    │   │   └── baseline_rhythm.py     <- Computing baseline behaviour with different strategies
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
 --------
@@ -86,13 +89,11 @@ This command calculates the similarity matrix based on the vectorized data.
 
 ### Folder Backup
 
-It's essential to regularly back up your data to prevent loss. Use the following `rsync` command to backup your data folder:
+It's essential to regularly back up your data to prevent loss. Use the following `rsync` command to backup the data folder:
 
 ```bash
 rsync -av --progress --delete data/ data.backup
 ```
-
-This command synchronizes the contents of the `data/` folder with `data.backup/`, ensuring that you have a current backup. The `--delete` flag ensures that files deleted from `data/` are also removed from `data.backup/` to keep the backup folder clean and consistent with the source.
 
 ---
 

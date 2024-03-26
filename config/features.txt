@@ -1,0 +1,48 @@
+{
+  "corona": {
+    "4epochs": [
+      "heart_rate_variability_avg:norm",
+      "stepsx1000:total:norm",
+      "steps:night:norm",
+      "steps:morning:norm",
+      "steps:afternoon:norm",
+      "steps:evening:norm",
+      "tst:norm",
+      "midsleep:norm"
+    ],
+    "7ds": [
+      "steps:night:7ds:sum:norm",
+      "steps:morning:7ds:sum:norm",
+      "steps:afternoon:7ds:sum:norm",
+      "steps:evening:7ds:sum:norm",
+      "tst:norm:mean",
+      "midsleep:norm:mean",
+      "heart_rate_variability_avg:mean:norm"
+    ],
+    "14ds": [
+      "steps:night:14ds:sum:norm",
+      "steps:morning:14ds:sum:norm",
+      "steps:afternoon:14ds:sum:norm",
+      "steps:evening:14ds:sum:norm",
+      "tst:mean",
+      "midsleep:mean",
+      "heart_rate_variability_avg:mean"
+    ]
+  },
+  "momo": {
+    "4epochs": [
+      "location:n_sps:norm",
+      "location:entropy:norm",
+      "location:log_variance:norm",
+      "location:proportion_home",
+      "application:count:comm:night:norm",
+      "application:count:comm:morning:norm",
+      "application:count:comm:afternoon:norm",
+      "application:count:comm:evening:norm",
+      "application:duration:comm:total:norm",
+      "screen:screen_use_durationtotal:sum:norm"
+    ],
+    "7ds": [],
+    "14ds": []
+  }
+}

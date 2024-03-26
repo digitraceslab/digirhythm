@@ -12,25 +12,38 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 import re
+import json
 
 np.set_printoptions(threshold=sys.maxsize)
 
-DATA_PATH = "data/processed/corona/similarity_matrix/"
 
-
+def path_factory(study, frequency):
+    
+    with open("config/features.txt") as f:
+        features = json.load(f)
+        
+    if study == 'corona':
+        sim_path = "data/processed/corona/similarity_matrix/"
+        feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
+        f = features[study][frequency]
+    elif study == 'momo':
+        sim_path = "data/processed/momomood/similarity_matrix/"
+        feature_path = f"data/processed/momomood/vector_momo_{frequency}.csv"
+        f = features[study][frequency]
+    else:
+        print("Unrecognize study")
+         
+    return (sim_path, feature_path, f)
+    
 def euclidean_similarity(values):
     d = euclidean_distances(values)
-    return 1 / (1 + d)  
+    return 1 / (1 + d)
 
 
 def similarity_matrix(sample, uid):
     """
     Return dictionary of similarity matrix
     """
-
-    # Reindex the DataFrame to include all dates in the range, filling missing ones
-    #    date_range = pd.date_range(start=sample.index.min(), end=sample.index.max(), freq='D')
-    #    sample = sample.reindex(date_range)
 
     # Compute the cosine similarity
     similarity = euclidean_similarity(sample.values)
@@ -40,8 +53,10 @@ def similarity_matrix(sample, uid):
 
     return similarity_df
 
+
 def is_sufficient_data(similarity_matrix, kernel_size):
     return similarity_matrix.shape[0] >= kernel_size * 2
+
 
 #### STABILITY SCORE
 def stability_score(similarity_matrix, kernel_size=7):
@@ -59,10 +74,12 @@ def stability_score(similarity_matrix, kernel_size=7):
     # Slide
     return stability_scores
 
+
 def largest_stability_score(stability_score):
     if len(stability_score) == 0:
         return np.nan
     return np.array(stability_score).argmax()
+
 
 def calculate_baseline_si(df, si_max, kernel_size):
     """
@@ -74,6 +91,7 @@ def calculate_baseline_si(df, si_max, kernel_size):
 
     return baseline
 
+
 #### AVERAGE BASELINE
 def calculate_baseline_avg(df):
     """
@@ -81,6 +99,7 @@ def calculate_baseline_avg(df):
     """
 
     return df.mean(axis=0)
+
 
 #### CLUSTERING BASELINE
 def calculate_baseline_clustering(df):
@@ -112,6 +131,7 @@ def calculate_baseline_clustering(df):
 
     return baseline
 
+
 def similarity_against_baseline(features_df, baseline):
     # Append baseline value to the end of the features frame
     df = pd.concat([features_df, pd.DataFrame([baseline])], ignore_index=True)
@@ -126,60 +146,21 @@ def similarity_against_baseline(features_df, baseline):
     return res
 
 
-FEATURES = [
-    "heart_rate_variability_avg:norm",
-    "stepsx1000:total:norm",
-    "steps:night:norm",
-    "steps:morning:norm",
-    "steps:afternoon:norm",
-    "steps:evening:norm",
-    "tst:norm",
-    "midsleep:norm",
-]
 
-# FEATURES = ["stepsx1000:total"]
-
-FEATURES_7DS = [
-    "steps:night:7ds:sum:norm",
-    "steps:morning:7ds:sum:norm",
-    "steps:afternoon:7ds:sum:norm",
-    "steps:evening:7ds:sum:norm",
-    "tst:norm:mean",
-    "midsleep:norm:mean",
-    "heart_rate_variability_avg:mean:norm",
-]
-
-
-# FEATURES_7DS = ["tst:mean", "midsleep:mean"]
-
-FEATURES_14DS = [
-    "steps:night:14ds:sum:norm",
-    "steps:morning:14ds:sum:norm",
-    "steps:afternoon:14ds:sum:norm",
-    "steps:evening:14ds:sum:norm",
-    "tst:mean",
-    "midsleep:mean",
-    "heart_rate_variability_avg:mean",
-]
-
-
-@hydra.main(version_base=None, config_path="../../../config", config_name="config")
+@hydra.main(version_base=None, config_path="../../config", config_name="config")
 def main(cfg: DictConfig):
-    print(OmegaConf.to_yaml(cfg))
+    print(OmegaConf.to_yaml(cfg.baseline_rhythm))
 
+    # CONFIG
+    study = cfg.baseline_rhythm.study
     frequency = cfg.baseline_rhythm.frequency
     method = cfg.baseline_rhythm.method
     kernel_size = cfg.baseline_rhythm.kernel_size
     overlapping_flag = False
 
-    fp = f"data/processed/corona/vector_corona_{frequency}.csv"
+    sim_path, feature_path, features = path_factory(study, frequency)
 
-    if frequency == "4epochs":
-        features = FEATURES
-    else:
-        features = FEATURES_7DS
-
-    features_df = pd.read_csv(fp)
+    features_df = pd.read_csv(feature_path)
     features_df.dropna(inplace=True, subset=features)
 
     res = {}
@@ -199,7 +180,7 @@ def main(cfg: DictConfig):
             continue
 
         # Save to csv
-        sm.to_csv(DATA_PATH + f"{frequency}/similarity_{uid}.csv")
+        sm.to_csv(sim_path + f"{frequency}/similarity_{uid}.csv")
 
         si_score = stability_score(sm, kernel_size)
         si_max = largest_stability_score(si_score)
@@ -217,7 +198,7 @@ def main(cfg: DictConfig):
 
     # Save to csv
     res_df = pd.DataFrame.from_dict(res, orient="index")
-    res_df.to_csv(DATA_PATH + f"/{method}/similarity_baseline_{frequency}.csv")
+    res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")
 
 
 if __name__ == "__main__":

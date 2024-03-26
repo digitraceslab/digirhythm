@@ -14,9 +14,9 @@ groups = ["mmm-bpd", "mmm-mdd", "mmm-bd", "mmm-control"]
 DATA_PATH = "data/interim/momo/"
 
 
-@hydra.main(version_base=None, config_path="../../../../config", config_name="sensor")
+@hydra.main(version_base=None, config_path="../../../../config", config_name="config")
 def main(cfg: DictConfig):
-    print(OmegaConf.to_yaml(cfg))
+    print(OmegaConf.to_yaml(cfg.processor))
 
     sensor = cfg.processor.sensor
     frequency = cfg.processor.frequency

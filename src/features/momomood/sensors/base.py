@@ -89,7 +89,7 @@ class BaseProcessor:
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
         return df
-
+    
     def add_group(self, df, group):
         df["group"] = group
         return df
@@ -171,7 +171,6 @@ class BaseProcessor:
                     f"{col}{segment}:{self.frequency}:sum" for segment in segments
                 ]
                 segment_df = df[segment_cols].copy()
-            #                    df[segment_cols].xs("sum", axis=1, level=1, drop_level=False).copy()
 
             else:
                 segment_cols = [f"{col}{segment}" for segment in segments]

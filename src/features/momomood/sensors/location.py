@@ -8,8 +8,30 @@ from ....decorators import save_output_with_freq
 
 @dataclass
 class LocationProcessor(BaseProcessor):
+    
+    def rename_feature_columns(self, df):
+        df.columns = [f"{self.sensor_name}:{col}" for col in df.columns if col not in ['user', 'date', 'device', 'group']]
+        return df
+    
+    def converter(self, df, types):
+        """
+        Convert column data types
+        """
+        df = df.astype(types)
+        return df
+
+    def filter_locations(
+        self, df, remove_disabled=False, remove_network=True, remove_zeros=True
+    ):
+        return location.filter_location(
+            df,
+            remove_disabled=remove_disabled,
+            remove_network=remove_network,
+            remove_zeros=remove_zeros,
+        )
+
     def extract_features(self) -> pd.DataFrame:
-        rule = "6H"
+        rule = "1D"
 
         # Preprocess pipeline
         df = (
@@ -26,41 +48,27 @@ class LocationProcessor(BaseProcessor):
                 remove_network=True,
                 remove_zeros=True,
             )  # Filter disabled and network location
-        )
-
-        # Resample into 5-min bins
-        resampled_df = (
-            (
-                df.groupby(["user", "device", "group"])[
-                    ["double_latitude", "double_longitude", "double_speed"]
-                ]
-                .resample("5T")
-                .median()
-                .reset_index()
-            )
-            .set_index("datetime")
-            .dropna()
+            .pipe(niimpy.util.aggregate, freq='5T', method_numerical='median')
         )
 
         config = {}
         config["resample_args"] = {"rule": rule}
 
         df = (
-            resampled_df.pipe(
+            df.pipe(
                 location.extract_features_location,
                 features={
                     location.location_distance_features: config,
                     location.location_significant_place_features: config,
                 },
             )  # call niimpy to extract features with pre-defined time bin
-            .reset_index()
-            .pipe(self.add_group, self.group)
-            .pipe(self.pivot)
-            .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            .pipe(self.add_group, self.group)
         )
 
+        df["date"] = df.index
+        
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
@@ -78,7 +86,7 @@ class LocationProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        print(df.columns)
+        print(df)
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
@@ -113,20 +121,3 @@ class LocationProcessor(BaseProcessor):
         )
 
         return pivoted_df
-
-    def converter(self, df, types):
-        """
-        Convert column data types
-        """
-        df = df.astype(types)
-        return df
-
-    def filter_locations(
-        self, df, remove_disabled=False, remove_network=True, remove_zeros=True
-    ):
-        return location.filter_location(
-            df,
-            remove_disabled=remove_disabled,
-            remove_network=remove_network,
-            remove_zeros=remove_zeros,
-        )
