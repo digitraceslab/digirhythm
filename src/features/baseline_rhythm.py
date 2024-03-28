@@ -18,23 +18,23 @@ np.set_printoptions(threshold=sys.maxsize)
 
 
 def path_factory(study, frequency):
-    
     with open("config/features.txt") as f:
         features = json.load(f)
-        
-    if study == 'corona':
+
+    if study == "corona":
         sim_path = "data/processed/corona/similarity_matrix/"
         feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
         f = features[study][frequency]
-    elif study == 'momo':
-        sim_path = "data/processed/momomood/similarity_matrix/"
-        feature_path = f"data/processed/momomood/vector_momo_{frequency}.csv"
+    elif study == "momo":
+        sim_path = "data/processed/momo/similarity_matrix/"
+        feature_path = f"data/processed/momo/vector_momo_{frequency}.csv"
         f = features[study][frequency]
     else:
         print("Unrecognize study")
-         
+
     return (sim_path, feature_path, f)
-    
+
+
 def euclidean_similarity(values):
     d = euclidean_distances(values)
     return 1 / (1 + d)
@@ -146,7 +146,6 @@ def similarity_against_baseline(features_df, baseline):
     return res
 
 
-
 @hydra.main(version_base=None, config_path="../../config", config_name="config")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg.baseline_rhythm))
@@ -158,15 +157,24 @@ def main(cfg: DictConfig):
     kernel_size = cfg.baseline_rhythm.kernel_size
     overlapping_flag = False
 
-    sim_path, feature_path, features = path_factory(study, frequency)
+    # momo and corona use different naming convention for user id
+    user_id = 'subject_id' if study == 'corona' else 'user'
 
+    sim_path, feature_path, features = path_factory(study, frequency)
+    print(features)
     features_df = pd.read_csv(feature_path)
+    print("Unique users before:", len(features_df[user_id].unique()))
+
     features_df.dropna(inplace=True, subset=features)
 
+    
     res = {}
-    for uid in features_df.subject_id.unique():
-        sample = features_df[features_df.subject_id == uid][features]
-
+    
+    print("Unique users after:", len(features_df[user_id].unique()))
+    for uid in features_df[user_id].unique():
+        sample = features_df[features_df[user_id] == uid][features]
+        
+        
         if overlapping_flag == False:
             if frequency == "7ds":
                 sample = sample[0::7]
@@ -176,6 +184,7 @@ def main(cfg: DictConfig):
         # print(sample.shape)
         sm = similarity_matrix(sample, uid)
 
+        
         if is_sufficient_data(sm, kernel_size) == False:
             continue
 

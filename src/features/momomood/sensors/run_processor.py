@@ -23,7 +23,7 @@ def main(cfg: DictConfig):
 
     dfs = []
     for group in groups:
-        # Processor execution based on command line argument
+        
         if sensor == "acti":
             processor = ActigraphProcessor(
                 sensor_name="acti",

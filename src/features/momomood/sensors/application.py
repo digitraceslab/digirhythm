@@ -29,14 +29,12 @@ class ApplicationProcessor(BaseProcessor):
             add_group=self.group,
         )
 
-        
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
         df["datetime"] = df["datetime"].dt.tz_localize(None)
         return df
-    
-    def extract_features(self) -> pd.DataFrame:
 
+    def extract_features(self) -> pd.DataFrame:
         rule = "6H"
 
         features = {
@@ -51,12 +49,18 @@ class ApplicationProcessor(BaseProcessor):
                 "resample_args": {"rule": rule},
             },
         }
-            
-        self.batt_data = self.batt_data.pipe(self.remove_first_last_day).pipe(self.remove_timezone_info)
 
-        self.screen_data = self.screen_data.pipe(self.remove_first_last_day).pipe(self.remove_timezone_info)
+        self.batt_data = self.batt_data.pipe(self.remove_first_last_day).pipe(
+            self.remove_timezone_info
+        )
 
-        self.data = self.data.pipe(self.remove_first_last_day).pipe(self.remove_timezone_info)
+        self.screen_data = self.screen_data.pipe(self.remove_first_last_day).pipe(
+            self.remove_timezone_info
+        )
+
+        self.data = self.data.pipe(self.remove_first_last_day).pipe(
+            self.remove_timezone_info
+        )
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -84,22 +88,24 @@ class ApplicationProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
-            
+
         # Normalize segemented features
         df = df.pipe(
             self.normalize_segments,
-            cols=["application:count:news",
-                 "application:duration:news",
-                 "application:count:games",
-                 "application:duration:games",
-                 "application:count:comm",
-                 "application:duration:comm",
-                 "application:count:leisure",
-                 "application:duration:leisure",
-                 "application:count:socialmedia",
-                 "application:duration:socialmedia",
-                 "application:count:off",
-                 "application:duration:off"],
+            cols=[
+                "application:count:news",
+                "application:duration:news",
+                "application:count:games",
+                "application:duration:games",
+                "application:count:comm",
+                "application:duration:comm",
+                "application:count:leisure",
+                "application:duration:leisure",
+                "application:count:socialmedia",
+                "application:duration:socialmedia",
+                "application:count:off",
+                "application:duration:off",
+            ],
         )
 
         return df
@@ -109,7 +115,7 @@ class ApplicationProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        
+
         df["datetime"] = pd.to_datetime(df["datetime"]).dt.tz_localize(None)
         df["hour"] = df["datetime"].dt.strftime("%H")
         df["date"] = df["datetime"].dt.strftime("%Y-%m-%d")

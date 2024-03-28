@@ -29,7 +29,7 @@ class VectorizeMoMo:
         # Loop over files and merge DataFrames
         for file in filtered_files:
             df = pd.read_csv(file, index_col=0)
-            
+
             # If merged_df is not initialized, assign the first DataFrame to it
             if merged_df is None:
                 merged_df = df
@@ -49,15 +49,39 @@ def normalize_features(df, cols, groupby_cols):
     # Normalize specified features per user and create new columns
 
     for col in cols:
+        # Check if feature is already normalized
+        if not col.endswith(":norm"):
 
-        # Check if feature already normalized
-        if not col.endswith(':norm'):
-            df[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(
-                lambda x: (x - x.min()) / (x.max() - x.min())
-            )
+            temp_frame = df.copy()
+            #df[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
+            temp_frame[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
+            df = pd.concat([df, temp_frame[f"{col}:norm"]], axis=1)
 
     return df
 
+def filter_users_with_insufficient_data(df, threshold=0.8):
+    """
+    Filter out users with less than the given threshold of non-missing observations.
+
+    Parameters:
+    df (DataFrame): The input data frame containing a 'user' column and observations.
+    threshold (float): The minimum proportion of non-missing observations required to keep a user.
+
+    Returns:
+    DataFrame: A filtered data frame with users meeting the data sufficiency threshold.
+    """
+
+    # Define a custom filter function
+    def sufficient_data(group):
+        # Calculate the proportion of non-missing observations for each user
+        proportion_non_missing = group.notnull().mean().mean()  # mean() twice: once for columns, once across resulting series
+        return proportion_non_missing >= threshold
+
+    print("Before filter:", len(df.user.unique()))
+    # Apply the filter function after grouping by 'user'
+    filtered_df = df.groupby('user').filter(sufficient_data)
+    print("After filter:", len(filtered_df.user.unique()))
+    return filtered_df
 
 
 @hydra.main(version_base=None, config_path="../../../config", config_name="config")
@@ -73,10 +97,20 @@ def main(cfg: DictConfig):
     merged_df = vectorize_momo.load_and_merge_dfs(merge_key=["user", "group", "date"])
 
     # Filter columns
-    prefixes = ("user", "group", "device", "date", "location", "sms", "call", "screen", "application")
+    prefixes = (
+        "user",
+        "group",
+        "device",
+        "date",
+        "location",
+        "sms",
+        "call",
+        "screen",
+        "application",
+    )
     cols = [col for col in merged_df.columns if col.startswith(prefixes)]
     filtered_df = merged_df.copy()[cols]
-    
+
     # Some post-processing
     # Reduce dist total to km
     # Identify columns that start with 'location:dist_total'
@@ -90,12 +124,22 @@ def main(cfg: DictConfig):
     filtered_df[location_dist_columns] = filtered_df[location_dist_columns] / 1000
 
     # Convert time at home by dividing n_home bins by total bins
-    filtered_df["location:proportion_home"] = filtered_df["location:n_home"] / filtered_df["location:n_bins"]
+    filtered_df["location:proportion_home"] = (
+        filtered_df["location:n_home"] / filtered_df["location:n_bins"]
+    )
 
     # Normalize feature
-    norm_cols = [col for col in filtered_df.columns if col.startswith(("location", "sms", "call", "screen", "application"))]
-    filtered_df = normalize_features(filtered_df, norm_cols, ['user', 'group', 'device'])
+    norm_cols = [
+        col
+        for col in filtered_df.columns
+        if col.startswith(("location", "sms", "call", "screen", "application"))
+    ]
+    filtered_df = normalize_features(
+        filtered_df, norm_cols, ["user", "group", "device"]
+    )
 
+    # Filter users with at least 80% non-missing data
+    filtered_df = filter_users_with_insufficient_data(filtered_df, 0.8)
 
     # Now, merged_df contains all data merged from the files based on the merge_key
     filtered_df.to_csv(DATA_PATH + f"vector_momo_{frequency}.csv")

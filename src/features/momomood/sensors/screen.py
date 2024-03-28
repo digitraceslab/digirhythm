@@ -19,7 +19,6 @@ class ScreenProcessor(BaseProcessor):
             add_group=self.group,
         )
 
-    @save_output_with_freq(DATA_PATH + "screen", "csv")
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
@@ -50,7 +49,6 @@ class ScreenProcessor(BaseProcessor):
                 batt_data,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
-            .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -64,6 +62,10 @@ class ScreenProcessor(BaseProcessor):
                 self.flatten_columns
             )
         elif self.frequency == "7ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
+        elif self.frequency == "3ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
@@ -87,8 +89,9 @@ class ScreenProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
-        df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
+        
+        df["hour"] = df.index.strftime("%H")
+        df["date"] = df.index.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(

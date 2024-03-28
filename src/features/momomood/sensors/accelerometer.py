@@ -30,7 +30,9 @@ class AccelerometerProcessor(BaseProcessor):
 
         res.columns = ["_".join(col).strip() for col in res.columns.values]
         res.reset_index(inplace=True)
-
+        
+        res = res.set_index('level_3')
+        print(res.head())
         return res
 
     def rename_cols(self, df):
@@ -51,6 +53,7 @@ class AccelerometerProcessor(BaseProcessor):
 
     def filter_outliers(self, df):
         df = df[df["magnitude"] < 2 * G]
+        
         return df
 
     def extract_features(self) -> pd.DataFrame:
@@ -73,9 +76,8 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.rename_cols)
             .pipe(self.magnitude)
             .pipe(self.filter_outliers)
-            .pipe(self.resample_data, rule, agg_dict)
-            .reset_index()
             .pipe(self.add_group, self.group)
+            .pipe(self.resample_data, rule, agg_dict)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
@@ -91,6 +93,10 @@ class AccelerometerProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
+        elif self.frequency == "3ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
 
         return df
 
@@ -100,8 +106,9 @@ class AccelerometerProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
-        df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
+        
+        df["hour"] = df.index.strftime("%H")
+        df["date"] = df.index.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(

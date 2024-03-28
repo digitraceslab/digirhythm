@@ -1,3 +1,6 @@
+defaults:
+  - override hydra/launcher: submitit_slurm
+  
 corona:
     sensor: activity # possible sensor: activity, sleep, hrv
     frequency: 4epochs # possible values: 4epochs, daily, 2wks
@@ -5,7 +8,7 @@ corona:
 processor:
     sensor: call # possible sensor: sms, call, location, screen, actigraphy, accelerometer
     frequency: 4epochs # possible values: 4epochs, daily, 2wks
-
+    
 vectorize:
     sensor: call # possible sensor: sms, call
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds

@@ -88,10 +88,18 @@ class BaseProcessor:
 
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
+        df["datetime"] = df["datetime"].dt.tz_localize(None)
         return df
-    
+
     def add_group(self, df, group):
-        df["group"] = group
+
+        group_dict = {
+            'mmm-bd' : 'bd',
+            'mmm-mdd' : 'mdd',
+            'mmm-bpd' : 'bpd',
+            'mmm-control' : 'control'
+        }
+        df["group"] = group_dict[group]
         return df
 
     # Roll over past n days and sum up values

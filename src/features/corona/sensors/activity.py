@@ -31,10 +31,10 @@ class ActivityProcessor(BaseCoronaProcessor):
     def rescale_steps(self, df):
         df["stepsx1000"] = df["steps"] / 1000
         return df
-    
+
     def filter_empty_step(self, df):
         return df[df["steps"] > 0]
-    
+
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"

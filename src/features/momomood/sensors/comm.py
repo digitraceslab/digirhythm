@@ -32,7 +32,7 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .reset_index()
+            #.reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -49,6 +49,10 @@ class CallProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
+        elif self.frequency == "3ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
+                self.flatten_columns
+            )
 
         # Normalize segmented features
         df = df.pipe(
@@ -63,6 +67,8 @@ class CallProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
+
+        df["datetime"] = df.index
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
@@ -97,7 +103,6 @@ class SmsProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -114,6 +119,10 @@ class SmsProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
+        elif self.frequency == "3ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
+                self.flatten_columns
+            )
 
         # Normalize segmented features
         df = df.pipe(
@@ -124,6 +133,8 @@ class SmsProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
+
+        df['datetime'] = df.index
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 

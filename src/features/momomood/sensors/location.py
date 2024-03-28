@@ -8,11 +8,14 @@ from ....decorators import save_output_with_freq
 
 @dataclass
 class LocationProcessor(BaseProcessor):
-    
     def rename_feature_columns(self, df):
-        df.columns = [f"{self.sensor_name}:{col}" for col in df.columns if col not in ['user', 'date', 'device', 'group']]
+        df.columns = [
+            f"{self.sensor_name}:{col}"
+            for col in df.columns
+            if col not in ["user", "date", "device", "group"]
+        ]
         return df
-    
+
     def converter(self, df, types):
         """
         Convert column data types
@@ -48,7 +51,7 @@ class LocationProcessor(BaseProcessor):
                 remove_network=True,
                 remove_zeros=True,
             )  # Filter disabled and network location
-            .pipe(niimpy.util.aggregate, freq='5T', method_numerical='median')
+            .pipe(niimpy.util.aggregate, freq="5T", method_numerical="median")
         )
 
         config = {}
@@ -68,7 +71,7 @@ class LocationProcessor(BaseProcessor):
         )
 
         df["date"] = df.index
-        
+
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
