@@ -10,26 +10,24 @@ DATA_PATH = "data/interim/momo/"
 
 @dataclass
 class BatteryProcessor(BaseProcessor):
-
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
         df["datetime"] = df["datetime"].dt.tz_localize(None)
         return df
-    
+
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
 
         wrapper_features = {
-            battery.battery_occurrences: {"resample_args":{"rule": rule}},
-            battery.battery_median_level: {"resample_args":{"rule": rule}},
-            battery.battery_mean_level: {"resample_args":{"rule": rule}},
-            battery.battery_std_level: {"resample_args":{"rule": rule}},
-            battery.battery_shutdown_time: {"resample_args":{"rule": rule}},
-            battery.battery_charge_discharge: {"resample_args":{"rule": rule}},
+            battery.battery_occurrences: {"resample_args": {"rule": rule}},
+            battery.battery_median_level: {"resample_args": {"rule": rule}},
+            battery.battery_mean_level: {"resample_args": {"rule": rule}},
+            battery.battery_std_level: {"resample_args": {"rule": rule}},
+            battery.battery_shutdown_time: {"resample_args": {"rule": rule}},
+            battery.battery_charge_discharge: {"resample_args": {"rule": rule}},
         }
 
-        
         self.data = self.data.sort_index()
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
@@ -50,11 +48,11 @@ class BatteryProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
                 self.flatten_columns
             )
-            
+
         elif self.frequency == "7ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
-            )    
+            )
         elif self.frequency == "3ds":
             df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
                 self.flatten_columns
@@ -80,7 +78,7 @@ class BatteryProcessor(BaseProcessor):
                 "battery_mean_level",
                 "battery_median_level",
                 "shutdown_time",
-                "charge/discharge"
+                "charge/discharge",
             ],
             fill_value=0,
         )

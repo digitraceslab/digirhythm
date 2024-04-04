@@ -51,13 +51,15 @@ def normalize_features(df, cols, groupby_cols):
     for col in cols:
         # Check if feature is already normalized
         if not col.endswith(":norm"):
-
             temp_frame = df.copy()
-            #df[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
-            temp_frame[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
+            # df[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
+            temp_frame[f"{col}:norm"] = df.groupby(groupby_cols)[col].transform(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            )
             df = pd.concat([df, temp_frame[f"{col}:norm"]], axis=1)
 
     return df
+
 
 def filter_users_with_insufficient_data(df, threshold=0.8):
     """
@@ -74,12 +76,14 @@ def filter_users_with_insufficient_data(df, threshold=0.8):
     # Define a custom filter function
     def sufficient_data(group):
         # Calculate the proportion of non-missing observations for each user
-        proportion_non_missing = group.notnull().mean().mean()  # mean() twice: once for columns, once across resulting series
+        proportion_non_missing = (
+            group.notnull().mean().mean()
+        )  # mean() twice: once for columns, once across resulting series
         return proportion_non_missing >= threshold
 
     print("Before filter:", len(df.user.unique()))
     # Apply the filter function after grouping by 'user'
-    filtered_df = df.groupby('user').filter(sufficient_data)
+    filtered_df = df.groupby("user").filter(sufficient_data)
     print("After filter:", len(filtered_df.user.unique()))
     return filtered_df
 

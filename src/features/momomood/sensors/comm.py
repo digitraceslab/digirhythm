@@ -32,7 +32,7 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            #.reset_index()
+            # .reset_index()
             .pipe(self.add_group, self.group)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -42,15 +42,15 @@ class CallProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=14).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=7).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=3).pipe(
                 self.flatten_columns
             )
 
@@ -67,14 +67,13 @@ class CallProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
-
         df["datetime"] = df.index
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date", "group", "device"],
             columns="hour",
             values=[
                 "incoming_count",
@@ -112,15 +111,15 @@ class SmsProcessor(BaseProcessor):
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=14).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=7).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
+            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=3).pipe(
                 self.flatten_columns
             )
 
@@ -133,14 +132,13 @@ class SmsProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
-
-        df['datetime'] = df.index
+        df["datetime"] = df.index
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date", "group", "device"],
             columns="hour",
             values=["incoming_count", "outgoing_count"],
             fill_value=0,

@@ -8,12 +8,12 @@ from ....decorators import save_output_with_freq
 
 @dataclass
 class LocationProcessor(BaseProcessor):
+    
     def rename_feature_columns(self, df):
-        df.columns = [
-            f"{self.sensor_name}:{col}"
-            for col in df.columns
-            if col not in ["user", "date", "device", "group"]
-        ]
+        for col in df.columns:
+
+            df.columns = [f"{self.sensor_name}:{col}"  if col not in ["user", "date", "device", "group"] 
+                      else col for col in df.columns]
         return df
 
     def converter(self, df, types):
@@ -66,19 +66,23 @@ class LocationProcessor(BaseProcessor):
                 },
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.rename_feature_columns)
-            .reset_index()
+
             .pipe(self.add_group, self.group)
         )
 
         df["date"] = df.index
-
+        print(df.head())
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
+            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=14).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+            df = df.pipe(self.roll, groupby=["user", "group","device"], days=7).pipe(
+                self.flatten_columns
+            )
+        elif self.frequency == "3ds":
+            df = df.pipe(self.roll, groupby=["user", "group","device"], days=3).pipe(
                 self.flatten_columns
             )
 
@@ -89,7 +93,7 @@ class LocationProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        print(df)
+
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 

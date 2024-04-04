@@ -23,7 +23,6 @@ def main(cfg: DictConfig):
 
     dfs = []
     for group in groups:
-        
         if sensor == "acti":
             processor = ActigraphProcessor(
                 sensor_name="acti",

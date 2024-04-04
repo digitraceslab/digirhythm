@@ -89,7 +89,7 @@ class ScreenProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        
+
         df["hour"] = df.index.strftime("%H")
         df["date"] = df.index.strftime("%Y-%m-%d")
 

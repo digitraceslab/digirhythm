@@ -1,11 +1,13 @@
 ### Analysis pipeline
 # 1. Process sensor with predetermined frequency
-python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
-python3 -m src.features.corona.sensors.run_processor corona.sensor=activity corona.frequency=4epochs
+srun  --cpus-per-task 4 python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
+srun  --cpus-per-task 4 python3 -m src.features.corona.sensors.run_processor corona.sensor=activity corona.frequency=4epochs
+srun  --cpus-per-task 4 python3 -m src.features.momomood.eigenbehav.run_processor 
+python3 -m src.features.corona.sensors.run_processor corona.sensor=survey corona.frequency=all
 
 # 2. Vectorize stuffs
-python3 -m src.features.momomood.vectorize_momo vectorize.frequency=4epochs
-python3 -m src.features.corona.vectorize_corona vectorize.frequency=4epochs,7ds,14ds --multirun
+srun  --cpus-per-task 4 python3 -m src.features.momomood.vectorize_momo vectorize.frequency=4epochs
+srun  --cpus-per-task 4 python3 -m src.features.corona.vectorize_corona vectorize.frequency=4epochs,7ds,14ds --multirun
 
 # 3. Compute baseline rhythm
 python3 -m src.features.baseline_rhythm baseline_rhythm.study=momo baseline_rhythm.frequency=4epochs
@@ -21,5 +23,8 @@ rsync -av --progress --delete data/ data.backup
 #SBATCH --mem=1G
 #SBATCH --output=out.log
 SING_IMAGE=../RAPIDS_27032024.sif 
-singularity run -B /scratch -B /m ../RAPIDS_27032024.sif  
-srun  --cpus-per-task 4 singularity exec -B /scratch -B /m ../RAPIDS_27032024.sif ./rapids "$1" --cores 4
+singularity run -B /scratch -B /m ../RAPIDS.sif
+singularity shell -B /m -B /scratch -B $PWD:/rapids --cwd /rapids -s /bin/bash ../RAPIDS.sif
+singularity exec -B /m -B /scratch -B $PWD:/rapids --cwd /rapids -s /bin/bash ../RAPIDS.sif
+
+srun  --cpus-per-task 4 singularity exec -B /scratch -B /m ../RAPIDS.sif ./rapids "$1" --cores 4

@@ -158,7 +158,7 @@ def main(cfg: DictConfig):
     overlapping_flag = False
 
     # momo and corona use different naming convention for user id
-    user_id = 'subject_id' if study == 'corona' else 'user'
+    user_id = "subject_id" if study == "corona" else "user"
 
     sim_path, feature_path, features = path_factory(study, frequency)
     print(features)
@@ -167,14 +167,12 @@ def main(cfg: DictConfig):
 
     features_df.dropna(inplace=True, subset=features)
 
-    
     res = {}
-    
+
     print("Unique users after:", len(features_df[user_id].unique()))
     for uid in features_df[user_id].unique():
         sample = features_df[features_df[user_id] == uid][features]
-        
-        
+
         if overlapping_flag == False:
             if frequency == "7ds":
                 sample = sample[0::7]
@@ -184,7 +182,6 @@ def main(cfg: DictConfig):
         # print(sample.shape)
         sm = similarity_matrix(sample, uid)
 
-        
         if is_sufficient_data(sm, kernel_size) == False:
             continue
 

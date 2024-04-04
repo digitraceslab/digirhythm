@@ -30,9 +30,9 @@ class AccelerometerProcessor(BaseProcessor):
 
         res.columns = ["_".join(col).strip() for col in res.columns.values]
         res.reset_index(inplace=True)
-        
-        res = res.set_index('level_3')
-        print(res.head())
+
+        res = res.set_index("level_3")
+
         return res
 
     def rename_cols(self, df):
@@ -53,7 +53,7 @@ class AccelerometerProcessor(BaseProcessor):
 
     def filter_outliers(self, df):
         df = df[df["magnitude"] < 2 * G]
-        
+
         return df
 
     def extract_features(self) -> pd.DataFrame:
@@ -106,7 +106,6 @@ class AccelerometerProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        
         df["hour"] = df.index.strftime("%H")
         df["date"] = df.index.strftime("%Y-%m-%d")
 

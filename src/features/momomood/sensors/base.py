@@ -92,12 +92,11 @@ class BaseProcessor:
         return df
 
     def add_group(self, df, group):
-
         group_dict = {
-            'mmm-bd' : 'bd',
-            'mmm-mdd' : 'mdd',
-            'mmm-bpd' : 'bpd',
-            'mmm-control' : 'control'
+            "mmm-bd": "bd",
+            "mmm-mdd": "mdd",
+            "mmm-bpd": "bpd",
+            "mmm-control": "control",
         }
         df["group"] = group_dict[group]
         return df

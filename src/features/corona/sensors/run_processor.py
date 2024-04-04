@@ -2,6 +2,7 @@ from config import PATHS
 from .activity import ActivityProcessor
 from .sleep import SleepProcessor
 from .hrv import HRVProcessor
+from .survey import SurveyProcessor
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -34,12 +35,18 @@ def main(cfg: DictConfig):
             path=PATHS["corona"]["nightly_recharge_summary"],
             frequency=frequency,
         )
+    elif sensor == "survey":
+        processor = SurveyProcessor(
+            sensor_name="survey",
+            path=PATHS["corona"]["raw_surveys"],
+            frequency=frequency,
+        )
     else:
         raise ValueError(
-            "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer]"
+            "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer, survey]"
         )
 
-    data = processor.extract_features().reset_index()
+    data = processor.extract_features()
     data.to_csv(f"{DATA_PATH}/{sensor}_{frequency}.csv", index=False)
 
 

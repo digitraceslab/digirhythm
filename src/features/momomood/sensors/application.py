@@ -88,6 +88,10 @@ class ApplicationProcessor(BaseProcessor):
             df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
                 self.flatten_columns
             )
+        elif self.frequency == "3ds":
+            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+                self.flatten_columns
+            )
 
         # Normalize segemented features
         df = df.pipe(
