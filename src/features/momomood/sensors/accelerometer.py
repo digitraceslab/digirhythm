@@ -94,7 +94,7 @@ class AccelerometerProcessor(BaseProcessor):
                 self.flatten_columns
             )
         elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
+            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
                 self.flatten_columns
             )
 

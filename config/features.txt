@@ -27,6 +27,25 @@
       "tst:mean",
       "midsleep:mean",
       "heart_rate_variability_avg:mean"
+    ],
+    "wellbeing_7ds" : [
+    
+      "subject_id",
+      "steps:night:7ds:sum:norm",
+      "steps:morning:7ds:sum:norm",
+      "steps:afternoon:7ds:sum:norm",
+      "steps:evening:7ds:sum:norm",
+      "tst:norm:mean",
+      "midsleep:norm:mean",
+      "heart_rate_variability_avg:mean:norm",
+      "age",
+      "gender",
+      "occupation",
+      "origin",
+      "MEQ",
+      "PSS",
+      "PSQI",
+      "PHQ"
     ]
   },
   "momo": {

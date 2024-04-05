@@ -8,12 +8,14 @@ from ....decorators import save_output_with_freq
 
 @dataclass
 class LocationProcessor(BaseProcessor):
-    
     def rename_feature_columns(self, df):
         for col in df.columns:
-
-            df.columns = [f"{self.sensor_name}:{col}"  if col not in ["user", "date", "device", "group"] 
-                      else col for col in df.columns]
+            df.columns = [
+                f"{self.sensor_name}:{col}"
+                if col not in ["user", "date", "device", "group"]
+                else col
+                for col in df.columns
+            ]
         return df
 
     def converter(self, df, types):
@@ -66,7 +68,6 @@ class LocationProcessor(BaseProcessor):
                 },
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.rename_feature_columns)
-
             .pipe(self.add_group, self.group)
         )
 
@@ -78,11 +79,11 @@ class LocationProcessor(BaseProcessor):
                 self.flatten_columns
             )
         elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group","device"], days=7).pipe(
+            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=7).pipe(
                 self.flatten_columns
             )
         elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group","device"], days=3).pipe(
+            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=3).pipe(
                 self.flatten_columns
             )
 

@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
-import click
 import logging
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+import pandas as pd
+import json
 
+def main():
+    
+    frequency = '7ds'
+    study = 'corona'
+    overlapping_flag = True
+    
+    with open("config/features.txt") as f:
+        features_dict = json.load(f)
+        
+    features_set = features_dict[study][f'wellbeing_{frequency}']
 
-@click.command()
-@click.argument("input_filepath", type=click.Path(exists=True))
-@click.argument("output_filepath", type=click.Path())
-def main(input_filepath, output_filepath):
-    """Runs data processing scripts to turn raw data from (../raw) into
-    cleaned data ready to be analyzed (saved in ../processed).
-    """
-    logger = logging.getLogger(__name__)
-    logger.info("making final data set from raw data")
-
+    interim_path = f'data/interim/{study}/'
+    processed_path = f'data/processed/{study}/'
+    
+    survey = pd.read_csv(interim_path + f'survey_all.csv', dtype={"subject_id": str})
+    features = pd.read_csv(processed_path + f'vector_{study}_{frequency}.csv', 
+                           dtype={"subject_id": str})
+#    for col in features.columns:
+#        print(col)
+    # Drop empty features
+    df = survey.merge(features, on=['subject_id', 'date'], how='left').dropna(subset=features_set)
+    
 
 if __name__ == "__main__":
-    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # not used in this stub but often useful for finding various files
-    project_dir = Path(__file__).resolve().parents[2]
-
-    # find .env automagically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
-
     main()

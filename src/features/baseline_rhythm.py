@@ -22,17 +22,19 @@ def path_factory(study, frequency):
         features = json.load(f)
 
     if study == "corona":
+        interim_path = "data/interim/corona/"
         sim_path = "data/processed/corona/similarity_matrix/"
         feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
         f = features[study][frequency]
     elif study == "momo":
+        interim_path = "data/interm/momo/interim/"
         sim_path = "data/processed/momo/similarity_matrix/"
         feature_path = f"data/processed/momo/vector_momo_{frequency}.csv"
         f = features[study][frequency]
     else:
         print("Unrecognize study")
 
-    return (sim_path, feature_path, f)
+    return (interim_path, sim_path, feature_path, f)
 
 
 def euclidean_similarity(values):
@@ -81,6 +83,7 @@ def largest_stability_score(stability_score):
     return np.array(stability_score).argmax()
 
 
+#### SI BASELINE
 def calculate_baseline_si(df, si_max, kernel_size):
     """
     Get the region with highest SI, then average
@@ -160,16 +163,14 @@ def main(cfg: DictConfig):
     # momo and corona use different naming convention for user id
     user_id = "subject_id" if study == "corona" else "user"
 
-    sim_path, feature_path, features = path_factory(study, frequency)
-    print(features)
+    interim_path, sim_path, feature_path, features = path_factory(study, frequency)
+
     features_df = pd.read_csv(feature_path)
-    print("Unique users before:", len(features_df[user_id].unique()))
 
     features_df.dropna(inplace=True, subset=features)
 
     res = {}
 
-    print("Unique users after:", len(features_df[user_id].unique()))
     for uid in features_df[user_id].unique():
         sample = features_df[features_df[user_id] == uid][features]
 
@@ -179,31 +180,41 @@ def main(cfg: DictConfig):
             if frequency == "14ds":
                 sample = sample[0::14]
 
-        # print(sample.shape)
+        # Compute similarity matrix
         sm = similarity_matrix(sample, uid)
 
+        # Stop if user does not have enough data
         if is_sufficient_data(sm, kernel_size) == False:
             continue
 
         # Save to csv
         sm.to_csv(sim_path + f"{frequency}/similarity_{uid}.csv")
 
-        si_score = stability_score(sm, kernel_size)
-        si_max = largest_stability_score(si_score)
-
+        # Compute baseline based on method
         if method == "si":
+            # Compute SI score and get max SI region
+            si_score = stability_score(sm, kernel_size)
+            si_max = largest_stability_score(si_score)
             baseline = calculate_baseline_si(sample, si_max, kernel_size)
+
+            # Save baseline
+            pd.DataFrame(baseline, index=[0]).to_csv(
+                interim_path + f"/baseline/{uid}_{frequency}_baseline.csv"
+            )
+
         elif method == "cluster":
             baseline = calculate_baseline_clustering(sample)
         elif method == "average":
             baseline = calculate_baseline_avg(sample)
 
         similarity_baseline = similarity_against_baseline(sample, baseline)
+        #        print(similarity_baseline)
 
         res[uid] = similarity_baseline
 
     # Save to csv
     res_df = pd.DataFrame.from_dict(res, orient="index")
+    print("Unique users:", len(res_df.index.unique()))
     res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")
 
 
