@@ -141,6 +141,7 @@ class BaseCoronaProcessor:
         # Define the time segments to be normalized
         segments = [":night", ":morning", ":afternoon", ":evening"]
 
+
         # Loop through each base column specified in 'cols'
         for col in cols:
             # Create a new column name for storing the sum of segments

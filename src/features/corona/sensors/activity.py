@@ -21,7 +21,7 @@ class ActivityProcessor(BaseCoronaProcessor):
         # Group by 'subject_id' and then resample by 6-hour intervals, summing the steps
         resampled_df = (
             df.groupby(["subject_id", "date"])
-            .resample("6H")[["steps", "stepsx1000"]]
+            .resample("6h")[["steps", "stepsx1000"]]
             .sum()
             .reset_index()
         )
@@ -33,11 +33,13 @@ class ActivityProcessor(BaseCoronaProcessor):
         return df
 
     def filter_empty_step(self, df):
+        print(df)
         return df[df["steps"] > 0]
 
     def extract_features(self) -> pd.DataFrame:
         # Agg daily events into 6H bins
         rule = "6H"
+
 
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
@@ -46,7 +48,6 @@ class ActivityProcessor(BaseCoronaProcessor):
             .pipe(self.filter_empty_step)
             .pipe(self.rescale_steps)
             .pipe(self.resample, rule)
-            .reset_index()
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
@@ -68,6 +69,7 @@ class ActivityProcessor(BaseCoronaProcessor):
             self.normalize_segments,
             cols=["steps", "stepsx1000"],
         ).pipe(self.normalize_features, ["stepsx1000:total", "steps:total"])
+        
         return df
 
     def pivot(self, df):

@@ -139,7 +139,9 @@ def similarity_against_baseline(features_df, baseline):
     # Append baseline value to the end of the features frame
     df = pd.concat([features_df, pd.DataFrame([baseline])], ignore_index=True)
 
-    # Compute cosine similarity
+    # Retain date
+
+    # Compute euclidean similarity
     baseline_similarity = euclidean_similarity(df.values)
 
     # Get the last row and remove the last indice
@@ -163,6 +165,7 @@ def main(cfg: DictConfig):
     # momo and corona use different naming convention for user id
     user_id = "subject_id" if study == "corona" else "user"
 
+    # Get paths and features
     interim_path, sim_path, feature_path, features = path_factory(study, frequency)
 
     features_df = pd.read_csv(feature_path)
@@ -172,7 +175,17 @@ def main(cfg: DictConfig):
     res = {}
 
     for uid in features_df[user_id].unique():
+        
+        # Create a user folder under interim 
+        path = f'{interim_path}{uid}'
+        if not os.path.exists(path):
+            os.makedirs(path)
+            
+        # Get features from each user
         sample = features_df[features_df[user_id] == uid][features]
+
+        # Retain date
+        date = features_df[features_df[user_id] == uid]["date"]
 
         if overlapping_flag == False:
             if frequency == "7ds":
@@ -196,27 +209,35 @@ def main(cfg: DictConfig):
             si_score = stability_score(sm, kernel_size)
             si_max = largest_stability_score(si_score)
             baseline = calculate_baseline_si(sample, si_max, kernel_size)
-
-            # Save baseline
-            pd.DataFrame(baseline, index=[0]).to_csv(
-                interim_path + f"/baseline/{uid}_{frequency}_baseline.csv"
-            )
-
         elif method == "cluster":
             baseline = calculate_baseline_clustering(sample)
         elif method == "average":
             baseline = calculate_baseline_avg(sample)
 
-        similarity_baseline = similarity_against_baseline(sample, baseline)
-        #        print(similarity_baseline)
+        # Save baseline
+        baseline_df = pd.DataFrame(baseline).transpose()
 
-        res[uid] = similarity_baseline
+        baseline_df.to_csv(
+            f"{path}/{frequency}_{method}_baseline.csv",
+            index=False,
+        )
+
+        # Compute similarity against baseline
+        baseline_similarity = similarity_against_baseline(sample, baseline)
+
+        # Save similarity against baseline
+        baseline_similarity_df = pd.DataFrame({'date': date, 'baseline_similarity' : baseline_similarity})
+        baseline_similarity_df.to_csv(
+            f"{path}/{frequency}_{method}_baseline_similarity.csv",
+            index=False,
+        )
+        
+        res[uid] = baseline_similarity
 
     # Save to csv
     res_df = pd.DataFrame.from_dict(res, orient="index")
     print("Unique users:", len(res_df.index.unique()))
     res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")
-
 
 if __name__ == "__main__":
     main()

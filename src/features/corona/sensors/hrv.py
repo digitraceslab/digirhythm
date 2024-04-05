@@ -18,14 +18,18 @@ class HRVProcessor(BaseCoronaProcessor):
                 df.pipe(self.roll, groupby=["subject_id"], days=14)
                 .pipe(self.flatten_columns)
                 .pipe(self.normalize_features, ["heart_rate_variability_avg:mean"])
+                .reset_index()
             )
         elif self.frequency == "7ds":
             df = (
                 df.pipe(self.roll, groupby=["subject_id"], days=7)
                 .pipe(self.flatten_columns)
                 .pipe(self.normalize_features, ["heart_rate_variability_avg:mean"])
+                .reset_index()
             )
         else:
-            df = self.normalize_features(df, ["heart_rate_variability_avg"])
+            df = self.normalize_features(df, ["heart_rate_variability_avg"]).reset_index()
 
+            
+        
         return df

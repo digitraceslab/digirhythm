@@ -21,18 +21,19 @@ class VectorizeCorona:
         # Use glob to find all files in the directory
         files = glob.glob(os.path.join(self.directory_path, "*.csv"))
 
-        # Filter files containing '4epochs' in their names
+        # Filter files containing frequency (4epochs, 7ds,14ds) in their names
         filtered_files = [
             file for file in files if self.frequency in os.path.basename(file)
         ]
 
         # Loop over files and merge DataFrames
         for file in filtered_files:
-            df = pd.read_csv(file, index_col=0)
+            df = pd.read_csv(file)
 
             if merged_df is None:
                 merged_df = df
             else:
+                
                 # Merge the current DataFrame with the merged_df
                 merged_df = pd.merge(
                     merged_df,

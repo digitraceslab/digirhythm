@@ -9,6 +9,12 @@ DATA_PATH = "data/interim/corona/"
 
 @dataclass
 class SleepProcessor(BaseCoronaProcessor):
+    
+    def drop_duplicates_and_sort(self, df) -> pd.DataFrame:
+        df.sort_values(by=["subject_id", "date"], inplace=True)
+        df = df.drop_duplicates(["subject_id", "date"])
+        return df
+    
     def set_datetime_index(self, df):
         df["datetime"] = df["date"] + " " + df["time"]
         df["datetime"] = pd.to_datetime(df["datetime"])
@@ -79,6 +85,7 @@ class SleepProcessor(BaseCoronaProcessor):
             .pipe(self.filter_nights)
             .pipe(self.retain_columns)
             .pipe(self.normalize_features, ["tst", "midsleep"])
+            .pipe(self.drop_duplicates_and_sort)
         )
 
         # Roll the dataframe based on frequency
@@ -91,4 +98,6 @@ class SleepProcessor(BaseCoronaProcessor):
                 self.flatten_columns
             )
 
+        df.reset_index(inplace=True)
+        
         return df
