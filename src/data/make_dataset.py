@@ -6,10 +6,9 @@ import json
 
 def main():
     
-    frequency = '7ds'
+    frequency = '14ds'
     study = 'corona'
 
-    
     with open("config/features.txt") as f:
         features_dict = json.load(f)
         
@@ -24,7 +23,8 @@ def main():
     features = pd.read_csv(processed_path + f'vector_{study}_{frequency}.csv', 
                            dtype={"subject_id": str})
 
-    res = survey.merge(features, on=['subject_id', 'date'], how='left').dropna(subset=features_set)
+    res = survey.merge(features, on=['subject_id', 'date'],
+                       how='left').dropna(subset=features_set)
     uids = res['subject_id'].unique()
     
     
@@ -36,19 +36,32 @@ def main():
         df = pd.read_csv(path + '4epochs_si_baseline_similarity.csv')
         df['subject_id'] = uid
         similarity_baseline_df = pd.concat([similarity_baseline_df, df])
-
-    
+        
+        dfam = df.groupby(['subject_id', 'date']).size().reset_index()
+        
+        dfam = dfam[dfam[0] > 1][0:3]
+        
     if frequency == '7ds':
         # Sort by date first
         similarity_baseline_df = similarity_baseline_df.sort_values(["subject_id", "date"])
         similarity_baseline_df.set_index("date", inplace=True)
-        similarity_baseline_df = similarity_baseline_df.groupby('subject_id').rolling(7).agg('mean').reset_index().dropna()
-        similarity_baseline_df.to_csv('abcd.csv')
-    # Merge with main features
-    print(res)
-    res = res.merge(similarity_baseline_df, on=['subject_id', 'date'], how='left')
-    res.to_csv('test.csv')
-    print(res.dropna(subset='PSS'))
+        similarity_baseline_df = similarity_baseline_df.groupby('subject_id').rolling(7).agg('median').reset_index().dropna()
+    elif frequency == '14ds':
+        similarity_baseline_df = similarity_baseline_df.sort_values(["subject_id", "date"])
+        similarity_baseline_df.set_index("date", inplace=True)
+        similarity_baseline_df = similarity_baseline_df.groupby('subject_id').rolling(14).agg('median').reset_index().dropna()
+        
+
+    features_set.append('baseline_similarity')
+    res = res.merge(similarity_baseline_df, on=['subject_id', 'date'], how='left')[features_set]
+
+    # Remove non-binary
+    res = res[res['gender'] != 'non-binary']
+    
+    # NOrmalize age
+    # Assuming df is your DataFrame and 'age' is the column you want to normalize
+    res['age:norm'] = (res['age'] - res['age'].min()) / (res['age'].max() - res['age'].min())
+    res.to_csv(processed_path + f'{frequency}_regularity_wellbeing.csv', index=False)
     
 if __name__ == "__main__":
     main()

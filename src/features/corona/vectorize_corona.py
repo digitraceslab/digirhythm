@@ -30,10 +30,11 @@ class VectorizeCorona:
         for file in filtered_files:
             df = pd.read_csv(file)
 
+            ids = df[["subject_id", "date"]]
+
             if merged_df is None:
                 merged_df = df
             else:
-                
                 # Merge the current DataFrame with the merged_df
                 merged_df = pd.merge(
                     merged_df,

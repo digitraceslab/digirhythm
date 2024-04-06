@@ -40,9 +40,10 @@ class ActivityProcessor(BaseCoronaProcessor):
         # Agg daily events into 6H bins
         rule = "6H"
 
-
         df = (
-            self.data.pipe(self.drop_duplicates_and_sort)
+            self.data.pipe(
+                self.drop_duplicates_and_sort, by=["subject_id", "date", "time"]
+            )
             .pipe(self.remove_first_last_day)
             .pipe(self.set_datetime_index)
             .pipe(self.filter_empty_step)
@@ -69,7 +70,7 @@ class ActivityProcessor(BaseCoronaProcessor):
             self.normalize_segments,
             cols=["steps", "stepsx1000"],
         ).pipe(self.normalize_features, ["stepsx1000:total", "steps:total"])
-        
+
         return df
 
     def pivot(self, df):

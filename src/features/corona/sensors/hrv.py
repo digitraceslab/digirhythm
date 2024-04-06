@@ -10,7 +10,7 @@ DATA_PATH = "data/interim/corona/"
 @dataclass
 class HRVProcessor(BaseCoronaProcessor):
     def extract_features(self) -> pd.DataFrame:
-        df = self.data.copy()
+        df = self.data.copy().pipe(self.drop_duplicates_and_sort)
 
         # Roll the dataframe based on frequency
         if self.frequency == "14ds":
@@ -28,8 +28,8 @@ class HRVProcessor(BaseCoronaProcessor):
                 .reset_index()
             )
         else:
-            df = self.normalize_features(df, ["heart_rate_variability_avg"]).reset_index()
+            df = self.normalize_features(
+                df, ["heart_rate_variability_avg"]
+            ).reset_index()
 
-            
-        
         return df

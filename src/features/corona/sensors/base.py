@@ -51,9 +51,11 @@ class BaseCoronaProcessor:
         """
         raise NotImplementedError("This method should be implemented by child classes.")
 
-    def drop_duplicates_and_sort(self, data: pd.DataFrame) -> pd.DataFrame:
-        data.sort_values(by=["subject_id", "date", "time"], inplace=True)
-        data = data.drop_duplicates(["subject_id", "date", "time"])
+    def drop_duplicates_and_sort(
+        self, data: pd.DataFrame, by=["subject_id", "date"]
+    ) -> pd.DataFrame:
+        data.sort_values(by=by, inplace=True)
+        data = data.drop_duplicates(by)
         return data
 
     def remove_first_last_day(self, df):
@@ -140,7 +142,6 @@ class BaseCoronaProcessor:
 
         # Define the time segments to be normalized
         segments = [":night", ":morning", ":afternoon", ":evening"]
-
 
         # Loop through each base column specified in 'cols'
         for col in cols:

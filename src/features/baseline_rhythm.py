@@ -27,7 +27,7 @@ def path_factory(study, frequency):
         feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
         f = features[study][frequency]
     elif study == "momo":
-        interim_path = "data/interm/momo/interim/"
+        interim_path = "data/interim/momo/interim/"
         sim_path = "data/processed/momo/similarity_matrix/"
         feature_path = f"data/processed/momo/vector_momo_{frequency}.csv"
         f = features[study][frequency]
@@ -175,12 +175,11 @@ def main(cfg: DictConfig):
     res = {}
 
     for uid in features_df[user_id].unique():
-        
-        # Create a user folder under interim 
-        path = f'{interim_path}{uid}'
+        # Create a user folder under interim
+        path = f"{interim_path}{uid}"
         if not os.path.exists(path):
             os.makedirs(path)
-            
+
         # Get features from each user
         sample = features_df[features_df[user_id] == uid][features]
 
@@ -226,18 +225,21 @@ def main(cfg: DictConfig):
         baseline_similarity = similarity_against_baseline(sample, baseline)
 
         # Save similarity against baseline
-        baseline_similarity_df = pd.DataFrame({'date': date, 'baseline_similarity' : baseline_similarity})
+        baseline_similarity_df = pd.DataFrame(
+            {"date": date, "baseline_similarity": baseline_similarity}
+        )
         baseline_similarity_df.to_csv(
             f"{path}/{frequency}_{method}_baseline_similarity.csv",
             index=False,
         )
-        
+
         res[uid] = baseline_similarity
 
     # Save to csv
     res_df = pd.DataFrame.from_dict(res, orient="index")
     print("Unique users:", len(res_df.index.unique()))
     res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")
+
 
 if __name__ == "__main__":
     main()
