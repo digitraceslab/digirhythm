@@ -35,13 +35,14 @@ class VectorizeMoMo:
                 merged_df = df
             else:
                 # Merge the current DataFrame with the merged_df
-                merged_df = pd.merge(
-                    merged_df,
+                merged_df = merged_df.merge(
                     df,
                     on=merge_key,
-                    how="inner",
+                    how="outer",
                 )
-
+                print(merged_df)
+                
+        merged_df.to_csv('dfm.csv')
         return merged_df
 
 
@@ -79,6 +80,7 @@ def filter_users_with_insufficient_data(df, threshold=0.8):
         proportion_non_missing = (
             group.notnull().mean().mean()
         )  # mean() twice: once for columns, once across resulting series
+        print(proportion_non_missing)
         return proportion_non_missing >= threshold
 
     print("Before filter:", len(df.user.unique()))
@@ -124,13 +126,6 @@ def main(cfg: DictConfig):
         if col.startswith(("location:dist_total", "location:max_dist_home"))
     ]
 
-    # Get distance in kilometers
-    filtered_df[location_dist_columns] = filtered_df[location_dist_columns] / 1000
-
-    # Convert time at home by dividing n_home bins by total bins
-    filtered_df["location:proportion_home"] = (
-        filtered_df["location:n_home"] / filtered_df["location:n_bins"]
-    )
 
     # Normalize feature
     norm_cols = [
@@ -138,13 +133,17 @@ def main(cfg: DictConfig):
         for col in filtered_df.columns
         if col.startswith(("location", "sms", "call", "screen", "application"))
     ]
-    filtered_df = normalize_features(
-        filtered_df, norm_cols, ["user", "group", "device"]
+    
+    filtered_df = (
+        filtered_df
+
+        # Normalize features
+        .pipe(normalize_features, norm_cols, ["user", "group"])
+
+        # Filter users with at least 80% non-missing data
+      #  .pipe(filter_users_with_insufficient_data, 0.8)
     )
-
-    # Filter users with at least 80% non-missing data
-    filtered_df = filter_users_with_insufficient_data(filtered_df, 0.8)
-
+    
     # Now, merged_df contains all data merged from the files based on the merge_key
     filtered_df.to_csv(DATA_PATH + f"vector_momo_{frequency}.csv")
     filtered_df.to_pickle(DATA_PATH + f"vector_momo_{frequency}.pkl")
@@ -152,3 +151,5 @@ def main(cfg: DictConfig):
 
 if __name__ == "__main__":
     main()
+
+    

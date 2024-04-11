@@ -79,8 +79,7 @@
       "application:count:comm:morning:norm",
       "application:count:comm:afternoon:norm",
       "application:count:comm:evening:norm",
-      "application:duration:comm:total:norm",
-      "screen:screen_use_durationtotal:sum:norm"
+      "application:duration:comm:total:norm"
     ],
     "7ds": [],
     "14ds": []

@@ -2,6 +2,7 @@
 # 1. Process sensor with predetermined frequency
 srun  --cpus-per-task 4 python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
 srun  --cpus-per-task 4 python3 -m src.features.corona.sensors.run_processor corona.sensor=activity corona.frequency=4epochs
+
 srun  --cpus-per-task 4 python3 -m src.features.momomood.eigenbehav.run_processor 
 python3 -m src.features.corona.sensors.run_processor corona.sensor=survey corona.frequency=all
 

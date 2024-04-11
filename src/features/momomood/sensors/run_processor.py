@@ -1,11 +1,12 @@
 from config import PATHS
-from .comm import *
-from .screen import *
+from .comm import CallProcessor, SmsProcessor
+from .screen import ScreenProcessor
 from .actigraph import *
-from .location import *
-from .battery import *
+from .location import LocationProcessor
+from .battery import BatteryProcessor
 from .accelerometer import AccelerometerProcessor
 from .application import ApplicationProcessor
+from .survey import SurveyProcessor
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
@@ -91,16 +92,25 @@ def main(cfg: DictConfig):
                 group=group,
                 frequency=frequency,
             )
-
+        elif sensor == "survey":
+            processor = SurveyProcessor(
+                sensor_name="survey",
+                path=PATHS[group]["mmmbackgroundanswers"],
+                table="MMMBackgroundAnswers",
+                group=group,
+                frequency='all',
+            )
         else:
             raise ValueError(
                 "Invalid processor type. Please choose for this list: [acti, screen, sms,or call, battery, accelerometer]"
             )
 
         data = processor.extract_features().reset_index()
+
         dfs.append(data)
 
     res = pd.concat(dfs)
+    # Keep only the unique combinations of 'id', 'question', 'answer', and 'choice_text'
     res.to_csv(f"{DATA_PATH}/{sensor}_{frequency}.csv", index=False)
 
 

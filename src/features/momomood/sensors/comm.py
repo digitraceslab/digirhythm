@@ -10,7 +10,9 @@ DATA_PATH = "data/interim/momo/"
 
 @dataclass
 class CallProcessor(BaseProcessor):
+
     def extract_features(self) -> pd.DataFrame:
+        
         # Agg daily events into 6H bins
         rule = "6H"
 
@@ -32,38 +34,22 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            # .reset_index()
             .pipe(self.add_group, self.group)
+            .pipe(self.normalize_numerical)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            .pipe(self.roll)
+            .pipe(self.normalize_segments,
+                  cols=["call:incoming_count",
+                        "call:outgoing_count",
+                        "call:incoming_duration_total",
+                        "call:outgoing_duration_total",
+                       ]
+                 )
         )
 
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=3).pipe(
-                self.flatten_columns
-            )
-
-        # Normalize segmented features
-        df = df.pipe(
-            self.normalize_segments,
-            cols=[
-                "call:incoming_count",
-                "call:outgoing_count",
-                "call:incoming_duration_total",
-                "call:outgoing_duration_total",
-            ],
-        )
         return df
 
     def pivot(self, df):
@@ -84,7 +70,6 @@ class CallProcessor(BaseProcessor):
             fill_value=0,
         )
 
-        print(pivoted_df)
         return pivoted_df
 
 
@@ -94,7 +79,7 @@ class SmsProcessor(BaseProcessor):
         # Agg daily events into 6H bins
         rule = "6H"
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": rule}}}
-
+        
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -103,32 +88,17 @@ class SmsProcessor(BaseProcessor):
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(self.add_group, self.group)
+            .pipe(self.normalize_numerical)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            .pipe(self.roll)
+            .pipe(self.normalize_segments,
+                  cols=["sms:incoming_count", "sms:outgoing_count"]
+                 
+            )
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "device", "group"], days=3).pipe(
-                self.flatten_columns
-            )
-
-        # Normalize segmented features
-        df = df.pipe(
-            self.normalize_segments,
-            cols=["sms:incoming_count", "sms:outgoing_count"],
-        )
-
         return df
 
     def pivot(self, df):

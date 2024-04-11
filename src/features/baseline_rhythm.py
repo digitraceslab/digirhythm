@@ -27,7 +27,7 @@ def path_factory(study, frequency):
         feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
         f = features[study][frequency]
     elif study == "momo":
-        interim_path = "data/interim/momo/interim/"
+        interim_path = "data/interim/momo/"
         sim_path = "data/processed/momo/similarity_matrix/"
         feature_path = f"data/processed/momo/vector_momo_{frequency}.csv"
         f = features[study][frequency]
@@ -173,7 +173,8 @@ def main(cfg: DictConfig):
     features_df.dropna(inplace=True, subset=features)
 
     res = {}
-
+    all_participants_baseline = {}
+    
     for uid in features_df[user_id].unique():
         # Create a user folder under interim
         path = f"{interim_path}{uid}"
@@ -213,7 +214,7 @@ def main(cfg: DictConfig):
         elif method == "average":
             baseline = calculate_baseline_avg(sample)
 
-        # Save baseline
+        ###### Save baseline behaviour ######
         baseline_df = pd.DataFrame(baseline).transpose()
 
         baseline_df.to_csv(
@@ -221,6 +222,9 @@ def main(cfg: DictConfig):
             index=False,
         )
 
+        all_participants_baseline[uid] = baseline
+
+        ###### Compute and save similarity to baseline behaviour ######
         # Compute similarity against baseline
         baseline_similarity = similarity_against_baseline(sample, baseline)
 
@@ -236,6 +240,10 @@ def main(cfg: DictConfig):
         res[uid] = baseline_similarity
 
     # Save to csv
+
+    all_participants_baseline_df = pd.DataFrame.from_dict(all_participants_baseline, orient="index")
+    all_participants_baseline_df.to_csv(interim_path + f"all_participants/{frequency}_{method}_baseline.csv")
+    
     res_df = pd.DataFrame.from_dict(res, orient="index")
     print("Unique users:", len(res_df.index.unique()))
     res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")

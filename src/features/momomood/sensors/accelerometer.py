@@ -13,6 +13,7 @@ G = 9.8
 
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
+    
     def resample_data(self, df, rule="6H", agg_dict=[]):
         """
         Resample the DataFrame based on a given rule and aggregation function.
@@ -26,7 +27,7 @@ class AccelerometerProcessor(BaseProcessor):
         - Resampled pandas DataFrame.
         """
 
-        res = df.groupby(["user", "device", "group"]).resample(rule).agg(agg_dict)
+        res = df.groupby(self.groupby_cols).resample(rule).agg(agg_dict)
 
         res.columns = ["_".join(col).strip() for col in res.columns.values]
         res.reset_index(inplace=True)
@@ -67,8 +68,9 @@ class AccelerometerProcessor(BaseProcessor):
             "z": ["mean", "std", "median"],
             "magnitude": ["mean", "std", "median"],
         }
-        # self.data.index.name = 'datetime'
+        
         self.data = self.data.sort_index()
+        
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -82,21 +84,30 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            #.pipe(self.roll)
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
-                self.flatten_columns
-            )
+        
+        # Agg daily events into 6H bins
+        rule = "1D"
+        
+        ddf = (
+            self.data.pipe(self.drop_duplicates_and_sort)
+            .pipe(self.remove_first_last_day)
+            .pipe(self.remove_timezone_info)
+            .pipe(self.rename_cols)
+            .pipe(self.magnitude)
+            .pipe(self.filter_outliers)
+            .pipe(self.add_group, self.group)
+            .pipe(self.resample_data, rule, agg_dict)
+            .pipe(self.pivot)
+            .pipe(self.flatten_columns)
+            .pipe(self.rename_feature_columns)
+            .reset_index()
+            #.pipe(self.roll)
+        )
+        
+        df = df.merge(ddf, on=['user', 'group', 'device', 'date']).pipe(self.roll)
+        
 
         return df
 
@@ -111,7 +122,7 @@ class AccelerometerProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date", "device", "group"],
             columns="hour",
             values=[
                 "x_mean",

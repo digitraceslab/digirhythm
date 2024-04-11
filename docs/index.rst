@@ -13,7 +13,7 @@ Contents:
 
    getting-started
    commands
-
+   answer-codebook
 
 
 Indices and tables
