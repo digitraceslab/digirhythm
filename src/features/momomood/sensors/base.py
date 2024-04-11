@@ -48,8 +48,8 @@ class BaseProcessor:
     screen_path: str = ""
     screen_data: pd.DataFrame = pd.DataFrame()
 
-    groupby_cols = ['user', 'device', 'group']
-    
+    groupby_cols = ["user", "device", "group"]
+
     def __post_init__(self) -> None:
         self.data = niimpy.read_sqlite(
             self.path, self.table, tz="Europe/Helsinki", add_group=self.group
@@ -84,9 +84,7 @@ class BaseProcessor:
             ]
 
         # Group by 'user' and 'device' and apply the filter_days function
-        return df.groupby(self.groupby_cols, group_keys=False).apply(
-            filter_days
-        )
+        return df.groupby(self.groupby_cols, group_keys=False).apply(filter_days)
 
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
@@ -105,21 +103,21 @@ class BaseProcessor:
 
     # Roll over past n days and return summary of aggregated values
     def roll(self, df):
-        
         # Sort by date first
         df = df.sort_values(["user", "date"])
         df.set_index("date", inplace=True)
-        
+
         # Roll the dataframe based on frequency
-        roll_map = {
-            "14ds": 14,
-            "7ds": 7,
-            "3ds": 3
-        }
-        
+        roll_map = {"14ds": 14, "7ds": 7, "3ds": 3}
+
         days = roll_map.get(self.frequency)
         if days:
-            return df.groupby(self.groupby_cols).rolling(days).agg(["sum", "min", "max", "mean", "std"]).pipe(self.flatten_columns)
+            return (
+                df.groupby(self.groupby_cols)
+                .rolling(days)
+                .agg(["sum", "min", "max", "mean", "std"])
+                .pipe(self.flatten_columns)
+            )
         return df
 
     def flatten_columns(self, df):
@@ -166,16 +164,20 @@ class BaseProcessor:
         """
         For each user, create a normalize version of numerical columns
         """
-        
-        numerical_columns = df.select_dtypes(include=['float64', 'int']).columns.tolist()
-        numerical_columns = [col for col in numerical_columns if col != 'user']
+
+        numerical_columns = df.select_dtypes(
+            include=["float64", "int"]
+        ).columns.tolist()
+        numerical_columns = [col for col in numerical_columns if col != "user"]
 
         # Apply min-max normalization and create new columns
         for col in numerical_columns:
-            df[f'{col}:norm'] = df.groupby(self.groupby_cols)[col].transform(lambda x: (x - x.min()) / (x.max() - x.min()))
-            
+            df[f"{col}:norm"] = df.groupby(self.groupby_cols)[col].transform(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            )
+
         return df
-    
+
     def normalize_segments(self, df, cols):
         """
         Normalizes specified segment columns within a DataFrame so that the sum of segments equals 1 for each row.

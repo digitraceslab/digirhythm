@@ -13,7 +13,6 @@ G = 9.8
 
 @dataclass
 class AccelerometerProcessor(BaseProcessor):
-    
     def resample_data(self, df, rule="6H", agg_dict=[]):
         """
         Resample the DataFrame based on a given rule and aggregation function.
@@ -68,9 +67,9 @@ class AccelerometerProcessor(BaseProcessor):
             "z": ["mean", "std", "median"],
             "magnitude": ["mean", "std", "median"],
         }
-        
+
         self.data = self.data.sort_index()
-        
+
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -84,12 +83,12 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
-            #.pipe(self.roll)
+            # .pipe(self.roll)
         )
-        
+
         # Agg daily events into 6H bins
         rule = "1D"
-        
+
         ddf = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -103,11 +102,10 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
-            #.pipe(self.roll)
+            # .pipe(self.roll)
         )
-        
-        df = df.merge(ddf, on=['user', 'group', 'device', 'date']).pipe(self.roll)
-        
+
+        df = df.merge(ddf, on=["user", "group", "device", "date"]).pipe(self.roll)
 
         return df
 

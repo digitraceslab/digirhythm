@@ -10,9 +10,7 @@ DATA_PATH = "data/interim/momo/"
 
 @dataclass
 class CallProcessor(BaseProcessor):
-
     def extract_features(self) -> pd.DataFrame:
-        
         # Agg daily events into 6H bins
         rule = "6H"
 
@@ -41,13 +39,15 @@ class CallProcessor(BaseProcessor):
             .pipe(self.rename_feature_columns)
             .reset_index()
             .pipe(self.roll)
-            .pipe(self.normalize_segments,
-                  cols=["call:incoming_count",
-                        "call:outgoing_count",
-                        "call:incoming_duration_total",
-                        "call:outgoing_duration_total",
-                       ]
-                 )
+            .pipe(
+                self.normalize_segments,
+                cols=[
+                    "call:incoming_count",
+                    "call:outgoing_count",
+                    "call:incoming_duration_total",
+                    "call:outgoing_duration_total",
+                ],
+            )
         )
 
         return df
@@ -79,7 +79,7 @@ class SmsProcessor(BaseProcessor):
         # Agg daily events into 6H bins
         rule = "6H"
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": rule}}}
-        
+
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -94,9 +94,9 @@ class SmsProcessor(BaseProcessor):
             .pipe(self.rename_feature_columns)
             .reset_index()
             .pipe(self.roll)
-            .pipe(self.normalize_segments,
-                  cols=["sms:incoming_count", "sms:outgoing_count"]
-                 
+            .pipe(
+                self.normalize_segments,
+                cols=["sms:incoming_count", "sms:outgoing_count"],
             )
         )
         return df

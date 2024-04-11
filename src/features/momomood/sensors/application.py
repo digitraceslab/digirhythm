@@ -57,10 +57,7 @@ class ApplicationProcessor(BaseProcessor):
         self.screen_data = self.screen_data.pipe(self.remove_first_last_day).pipe(
             self.remove_timezone_info
         )
-
-        self.data = self.data.pipe(self.remove_first_last_day).pipe(
-            self.remove_timezone_info
-        )
+        '''
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -78,25 +75,29 @@ class ApplicationProcessor(BaseProcessor):
             .pipe(self.rename_feature_columns)
             .reset_index()
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-
-        # Normalize segemented features
-        df = df.pipe(
-            self.normalize_segments,
-            cols=[
+        '''
+        
+        df = (
+            self.data.pipe(self.drop_duplicates_and_sort)
+            .pipe(self.remove_first_last_day)
+            .pipe(self.remove_timezone_info)
+            .pipe(
+                app.extract_features_app,
+                self.batt_data,
+                self.screen_data,
+                features=features,
+            )  # call niimpy to extract features with pre-defined time bin
+            .pipe(self.add_group, self.group)
+            .reset_index()
+            .pipe(self.pivot)
+            .pipe(self.flatten_columns)
+            .pipe(self.rename_feature_columns)
+            .pipe(self.normalize_numerical)
+            .reset_index()
+            .pipe(self.roll)
+            .pipe(
+                self.normalize_segments,
+                cols=[
                 "application:count:news",
                 "application:duration:news",
                 "application:count:games",
@@ -110,8 +111,9 @@ class ApplicationProcessor(BaseProcessor):
                 "application:count:off",
                 "application:duration:off",
             ],
+            )
         )
-
+        
         return df
 
     def pivot(self, df):
@@ -126,7 +128,7 @@ class ApplicationProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date", "device", "group"],
             columns=["app_group", "hour"],
             values=["count", "duration"],
             fill_value=0,

@@ -9,14 +9,13 @@ from ....decorators import save_output_with_freq
 @dataclass
 class LocationProcessor(BaseProcessor):
     def rename_feature_columns(self, df):
-        
         df.columns = [
-                f"{self.sensor_name}:{col}"
-                if col not in ["user", "date", "device", "group"]
-                else col
-                for col in df.columns
-            ]
-            
+            f"{self.sensor_name}:{col}"
+            if col not in ["user", "date", "device", "group"]
+            else col
+            for col in df.columns
+        ]
+
         return df
 
     def converter(self, df, types):
@@ -60,7 +59,6 @@ class LocationProcessor(BaseProcessor):
         config = {}
         config["resample_args"] = {"rule": rule}
 
-        
         df = (
             df.pipe(
                 location.extract_features_location,
@@ -72,12 +70,11 @@ class LocationProcessor(BaseProcessor):
             .pipe(self.rename_feature_columns)
             .pipe(self.add_group, self.group)
         )
-        
+
         # Some second-level features
         print(df.columns)
         # Calculate proportion of time at home
-        df['location:proportion_home'] = df['location:n_home'] / df['location:n_bins']
-    
+        df["location:proportion_home"] = df["location:n_home"] / df["location:n_bins"]
 
         df["date"] = df.index
 

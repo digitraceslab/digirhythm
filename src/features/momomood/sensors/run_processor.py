@@ -98,7 +98,7 @@ def main(cfg: DictConfig):
                 path=PATHS[group]["mmmbackgroundanswers"],
                 table="MMMBackgroundAnswers",
                 group=group,
-                frequency='all',
+                frequency="all",
             )
         else:
             raise ValueError(

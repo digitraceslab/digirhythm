@@ -174,7 +174,7 @@ def main(cfg: DictConfig):
 
     res = {}
     all_participants_baseline = {}
-    
+
     for uid in features_df[user_id].unique():
         # Create a user folder under interim
         path = f"{interim_path}{uid}"
@@ -241,9 +241,13 @@ def main(cfg: DictConfig):
 
     # Save to csv
 
-    all_participants_baseline_df = pd.DataFrame.from_dict(all_participants_baseline, orient="index")
-    all_participants_baseline_df.to_csv(interim_path + f"all_participants/{frequency}_{method}_baseline.csv")
-    
+    all_participants_baseline_df = pd.DataFrame.from_dict(
+        all_participants_baseline, orient="index"
+    )
+    all_participants_baseline_df.to_csv(
+        interim_path + f"all_participants/{frequency}_{method}_baseline.csv"
+    )
+
     res_df = pd.DataFrame.from_dict(res, orient="index")
     print("Unique users:", len(res_df.index.unique()))
     res_df.to_csv(sim_path + f"/{method}/similarity_baseline_{frequency}.csv")

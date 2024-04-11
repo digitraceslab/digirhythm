@@ -41,8 +41,8 @@ class VectorizeMoMo:
                     how="outer",
                 )
                 print(merged_df)
-                
-        merged_df.to_csv('dfm.csv')
+
+        merged_df.to_csv("dfm.csv")
         return merged_df
 
 
@@ -126,24 +126,21 @@ def main(cfg: DictConfig):
         if col.startswith(("location:dist_total", "location:max_dist_home"))
     ]
 
-
     # Normalize feature
     norm_cols = [
         col
         for col in filtered_df.columns
         if col.startswith(("location", "sms", "call", "screen", "application"))
     ]
-    
+
     filtered_df = (
         filtered_df
-
         # Normalize features
         .pipe(normalize_features, norm_cols, ["user", "group"])
-
         # Filter users with at least 80% non-missing data
-      #  .pipe(filter_users_with_insufficient_data, 0.8)
+        #  .pipe(filter_users_with_insufficient_data, 0.8)
     )
-    
+
     # Now, merged_df contains all data merged from the files based on the merge_key
     filtered_df.to_csv(DATA_PATH + f"vector_momo_{frequency}.csv")
     filtered_df.to_pickle(DATA_PATH + f"vector_momo_{frequency}.pkl")
@@ -151,5 +148,3 @@ def main(cfg: DictConfig):
 
 if __name__ == "__main__":
     main()
-
-    
