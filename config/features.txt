@@ -46,7 +46,12 @@
       "MEQ",
       "PSS",
       "PSQI",
-      "PHQ"
+      "PHQ",
+      "BIG5_Extraversion", 
+      "BIG5_Agreeableness", 
+      "BIG5_Conscientiousness", 
+      "BIG5_Neuroticism", 
+      "BIG5_Openness"
     ],
     "wellbeing_14ds" : [
     
@@ -66,7 +71,12 @@
       "MEQ",
       "PSS",
       "PSQI",
-      "PHQ"
+      "PHQ",
+      "BIG5_Extraversion", 
+      "BIG5_Agreeableness", 
+      "BIG5_Conscientiousness", 
+      "BIG5_Neuroticism", 
+      "BIG5_Openness"
     ]
   },
   "momo": {

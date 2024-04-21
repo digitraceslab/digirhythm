@@ -195,7 +195,9 @@ class SurveyProcessor:
         return df
 
     def fill_demographics(self, df):
-        col = ["age", "gender", "occupation", "origin", "children_at_home"]
+        col = ["age", "gender", "occupation", "origin", "children_at_home",
+               "BIG5_Extraversion", "BIG5_Agreeableness", "BIG5_Conscientiousness", "BIG5_Neuroticism",
+               "BIG5_Openness"]
         df[col] = df[col].fillna(df.groupby(["subject_id"])[col].ffill())
 
         return df

@@ -13,7 +13,7 @@ srun  --cpus-per-task 4 python3 -m src.features.corona.vectorize_corona vectoriz
 # 3. Compute baseline rhythm
 python3 -m src.features.baseline_rhythm baseline_rhythm.study=momo baseline_rhythm.frequency=4epochs
 
-# 4. Create dataset
+# 4. Create dataset for analysis
 python3 -m src.data.make_dataset 
 
 ### Util script

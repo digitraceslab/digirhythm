@@ -6,7 +6,7 @@ import json
 
 def main():
     
-    frequency = '14ds'
+    frequency = '7ds'
     study = 'corona'
 
     with open("config/features.txt") as f:
@@ -20,7 +20,7 @@ def main():
     # Survey and processed features
 
     survey = pd.read_csv(interim_path + f'survey_all.csv', dtype={"subject_id": str})
-    features = pd.read_csv(processed_path + f'vector_{study}_{frequency}.csv', 
+    features = pd.read_csv(processed_path + f'{study}_all_features_{frequency}.csv', 
                            dtype={"subject_id": str})
 
     res = survey.merge(features, on=['subject_id', 'date'],
@@ -59,7 +59,6 @@ def main():
     res = res[res['gender'] != 'non-binary']
     
     # NOrmalize age
-    # Assuming df is your DataFrame and 'age' is the column you want to normalize
     res['age:norm'] = (res['age'] - res['age'].min()) / (res['age'].max() - res['age'].min())
     res.to_csv(processed_path + f'{frequency}_regularity_wellbeing.csv', index=False)
     

@@ -24,7 +24,7 @@ def path_factory(study, frequency):
     if study == "corona":
         interim_path = "data/interim/corona/"
         sim_path = "data/processed/corona/similarity_matrix/"
-        feature_path = f"data/processed/corona/vector_corona_{frequency}.csv"
+        feature_path = f"data/processed/corona/corona_all_features_{frequency}.csv"
         f = features[study][frequency]
     elif study == "momo":
         interim_path = "data/interim/momo/"
@@ -190,8 +190,10 @@ def main(cfg: DictConfig):
         if overlapping_flag == False:
             if frequency == "7ds":
                 sample = sample[0::7]
+                date = date[0::7]
             if frequency == "14ds":
                 sample = sample[0::14]
+                date = date[0::14]
 
         # Compute similarity matrix
         sm = similarity_matrix(sample, uid)

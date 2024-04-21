@@ -1,8 +1,3 @@
-
-corona:
-    sensor: activity # possible sensor: activity, sleep, hrv
-    frequency: 4epochs # possible values: 4epochs, daily, 2wks
-    
 processor:
     sensor: call # possible sensor: sms, call, location, screen, actigraphy, accelerometer
     frequency: 4epochs # possible values: 4epochs, daily, 2wks
@@ -10,7 +5,12 @@ processor:
 vectorize:
     sensor: call # possible sensor: sms, call
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
-
+    
+clustering:
+    study: corona # possible sensor: sms, call
+    frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
+    min_samples: 14 # min samples for each cluster
+    
 baseline_rhythm:
     study: corona # possible values: corona, momo
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds

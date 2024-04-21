@@ -57,26 +57,7 @@ class ApplicationProcessor(BaseProcessor):
         self.screen_data = self.screen_data.pipe(self.remove_first_last_day).pipe(
             self.remove_timezone_info
         )
-        '''
-        df = (
-            self.data.pipe(self.drop_duplicates_and_sort)
-            .pipe(self.remove_first_last_day)
-            .pipe(self.remove_timezone_info)
-            .pipe(
-                app.extract_features_app,
-                self.batt_data,
-                self.screen_data,
-                features=features,
-            )  # call niimpy to extract features with pre-defined time bin
-            .reset_index()
-            .pipe(self.add_group, self.group)
-            .pipe(self.pivot)
-            .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
-            .reset_index()
-        )
-        '''
-        
+
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -98,22 +79,22 @@ class ApplicationProcessor(BaseProcessor):
             .pipe(
                 self.normalize_segments,
                 cols=[
-                "application:count:news",
-                "application:duration:news",
-                "application:count:games",
-                "application:duration:games",
-                "application:count:comm",
-                "application:duration:comm",
-                "application:count:leisure",
-                "application:duration:leisure",
-                "application:count:socialmedia",
-                "application:duration:socialmedia",
-                "application:count:off",
-                "application:duration:off",
-            ],
+                    "application:count:news",
+                    "application:duration:news",
+                    "application:count:games",
+                    "application:duration:games",
+                    "application:count:comm",
+                    "application:duration:comm",
+                    "application:count:leisure",
+                    "application:duration:leisure",
+                    "application:count:socialmedia",
+                    "application:duration:socialmedia",
+                    "application:count:off",
+                    "application:duration:off",
+                ],
             )
         )
-        
+
         return df
 
     def pivot(self, df):
