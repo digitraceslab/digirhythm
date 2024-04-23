@@ -9,10 +9,11 @@ vectorize:
 clustering:
     study: corona # possible sensor: sms, call
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
-    min_samples: 14 # min samples for each cluster
+    min_samples: 28 # min samples for each cluster
     
 baseline_rhythm:
     study: corona # possible values: corona, momo
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
     kernel_size: 7 # kernel window to compute baseline 
     method: si # method to compute baseline rhythm, possible values: si, average, cluster
+    min_sample: 30 # minimum amount of observations per user
