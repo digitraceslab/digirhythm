@@ -120,3 +120,4 @@ ENV/
 outputs/
 viz/
 multirun/
+*.svg
