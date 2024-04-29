@@ -37,6 +37,21 @@ class ApplicationProcessor(BaseProcessor):
     def extract_features(self) -> pd.DataFrame:
         rule = "6H"
 
+        prefixes = [
+            "application:count:news",
+            "application:duration:news",
+            "application:count:games",
+            "application:duration:games",
+            "application:count:comm",
+            "application:duration:comm",
+            "application:count:leisure",
+            "application:duration:leisure",
+            "application:count:socialmedia",
+            "application:duration:socialmedia",
+            "application:count:off",
+            "application:duration:off",
+        ]
+
         features = {
             app.app_count: {
                 "app_column_name": "application_name",
@@ -72,27 +87,17 @@ class ApplicationProcessor(BaseProcessor):
             .reset_index()
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
-            .pipe(self.normalize_numerical)
+            .pipe(self.rename_segment_columns)
+            .pipe(self.sum_segment, prefixes=prefixes)
             .reset_index()
             .pipe(self.roll)
             .pipe(
-                self.normalize_segments,
-                cols=[
-                    "application:count:news",
-                    "application:duration:news",
-                    "application:count:games",
-                    "application:duration:games",
-                    "application:count:comm",
-                    "application:duration:comm",
-                    "application:count:leisure",
-                    "application:duration:leisure",
-                    "application:count:socialmedia",
-                    "application:duration:socialmedia",
-                    "application:count:off",
-                    "application:duration:off",
-                ],
-            )
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
+            .pipe(self.normalize_segments, cols=prefixes)
         )
 
         return df

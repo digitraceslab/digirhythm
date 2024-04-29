@@ -7,6 +7,11 @@ from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/momo/"
 
+import os
+
+path = os.path.abspath(niimpy.__file__)
+print(path)
+
 
 @dataclass
 class ScreenProcessor(BaseProcessor):
@@ -20,6 +25,15 @@ class ScreenProcessor(BaseProcessor):
         )
 
     def extract_features(self) -> pd.DataFrame:
+        prefixes = [
+            "screen:screen_use_durationtotal",
+            "screen:screen_off_durationtotal",
+            "screen:screen_on_durationtotal",
+            "screen:screen_on_count",
+            "screen:screen_off_count",
+            "screen:screen_use_count",
+        ]
+
         # Agg daily events into 6H bins
         rule = "6H"
 
@@ -49,39 +63,22 @@ class ScreenProcessor(BaseProcessor):
                 batt_data,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
+            .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
+            .pipe(self.rename_segment_columns)
+            .pipe(self.sum_segment, prefixes=prefixes)
             .reset_index()
+            .pipe(self.roll)
+            .pipe(
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
+            .pipe(self.normalize_segments, cols=prefixes)
         )
 
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-
-        # Normalize segemented features
-        df = df.pipe(
-            self.normalize_segments,
-            cols=[
-                "screen:screen_use_durationtotal",
-                "screen:screen_off_durationtotal",
-                "screen:screen_on_durationtotal",
-                "screen:screen_on_count",
-                "screen:screen_off_count",
-                "screen:screen_use_count",
-            ],
-        )
         return df
 
     def pivot(self, df):
@@ -95,7 +92,7 @@ class ScreenProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date", "device", "group"],
             columns="hour",
             values=[
                 "screen_use_durationtotal",

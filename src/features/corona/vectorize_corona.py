@@ -58,8 +58,8 @@ def main(cfg: DictConfig):
     merged_df = vectorize_momo.load_and_merge_dfs(merge_key=["subject_id", "date"])
 
     # Now, merged_df contains all data merged from the files based on the merge_key
-    merged_df.to_csv(DATA_PATH + f"corona_all_features_{frequency}.csv")
-    merged_df.to_pickle(DATA_PATH + f"corona_all_features_{frequency}.pkl")
+    merged_df.to_csv(DATA_PATH + f"all_features_{frequency}.csv")
+    merged_df.to_pickle(DATA_PATH + f"all_features_{frequency}.pkl")
 
 
 if __name__ == "__main__":

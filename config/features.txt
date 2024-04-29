@@ -85,11 +85,14 @@
       "location:entropy:norm",
       "location:log_variance:norm",
       "location:proportion_home",
-      "application:count:comm:night:norm",
-      "application:count:comm:morning:norm",
-      "application:count:comm:afternoon:norm",
-      "application:count:comm:evening:norm",
-      "application:duration:comm:total:norm"
+
+      
+      "call:duration:total:norm",
+      "call:count:total:norm",
+      
+      "sms:count:total:norm",
+      
+      "screen:screen_use_durationtotal:total:norm"
     ],
     "7ds": [],
     "14ds": []

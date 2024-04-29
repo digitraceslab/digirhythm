@@ -16,4 +16,11 @@ baseline_rhythm:
     frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
     kernel_size: 7 # kernel window to compute baseline 
     method: si # method to compute baseline rhythm, possible values: si, average, cluster
-    min_sample: 30 # minimum amount of observations per user
+    min_sample: 56 # minimum amount of observations per user
+    
+outliers:
+    study: corona # possible values: corona, momo
+    frequency: 4epochs # possible values: 4epochs, 7ds, 14ds
+    method: si # method used to compute baseline rhythm, possible values: si, average, cluster
+    outlier_method: std # method used to compute outliers. possible values: std, boxplot
+    threshold: 2 # Threshold to compute outliers. This is the degree of measurement away from the mean, i.e 1.5 std, 1.85 std

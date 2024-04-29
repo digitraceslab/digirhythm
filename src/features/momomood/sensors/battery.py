@@ -28,7 +28,15 @@ class BatteryProcessor(BaseProcessor):
             battery.battery_charge_discharge: {"resample_args": {"rule": rule}},
         }
 
-        self.data = self.data.sort_index()
+        prefixes = [
+            "battery:battery_mean_level",
+            "battery:battery_median_level",
+            "battery:battery_std_level",
+            "battery:charge/discharge",
+            "battery:occurrences",
+            "battery:shutdown_time",
+        ]
+
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -36,27 +44,21 @@ class BatteryProcessor(BaseProcessor):
             .pipe(
                 battery.extract_features_battery, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
+            .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
+            .pipe(self.rename_segment_columns)
+            .pipe(self.sum_segment, prefixes=prefixes)
             .reset_index()
+            .pipe(self.roll)
+            .pipe(
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
+            .pipe(self.normalize_segments, cols=prefixes)
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=14).pipe(
-                self.flatten_columns
-            )
-
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group"], days=3).pipe(
-                self.flatten_columns
-            )
 
         return df
 
@@ -70,7 +72,7 @@ class BatteryProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "device", "date", "group"],
             columns="hour",
             values=[
                 "occurrences",

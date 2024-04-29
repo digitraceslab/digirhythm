@@ -11,6 +11,13 @@ DATA_PATH = "data/interim/momo/"
 @dataclass
 class CallProcessor(BaseProcessor):
     def extract_features(self) -> pd.DataFrame:
+        prefixes = [
+            "call:incoming_count",
+            "call:outgoing_count",
+            "call:incoming_duration_total",
+            "call:outgoing_duration_total",
+        ]
+
         # Agg daily events into 6H bins
         rule = "6H"
 
@@ -32,22 +39,20 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
-            .pipe(self.normalize_numerical)
+            .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
+            .pipe(self.rename_segment_columns)
+            .pipe(self.sum_segment, prefixes=prefixes)
             .reset_index()
             .pipe(self.roll)
             .pipe(
-                self.normalize_segments,
-                cols=[
-                    "call:incoming_count",
-                    "call:outgoing_count",
-                    "call:incoming_duration_total",
-                    "call:outgoing_duration_total",
-                ],
-            )
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
+            .pipe(self.normalize_segments, cols=prefixes)
         )
 
         return df
@@ -76,6 +81,7 @@ class CallProcessor(BaseProcessor):
 class SmsProcessor(BaseProcessor):
     #    @save_output_with_freq(DATA_PATH + "sms", "csv")
     def extract_features(self) -> pd.DataFrame:
+        prefixes = ["sms:incoming_count", "sms:outgoing_count"]
         # Agg daily events into 6H bins
         rule = "6H"
         wrapper_features = {comm.sms_count: {"resample_args": {"rule": rule}}}
@@ -87,18 +93,22 @@ class SmsProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.add_group, self.group)
-            .pipe(self.normalize_numerical)
+            .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
+            .pipe(self.rename_segment_columns)
+            .pipe(self.sum_segment, prefixes=prefixes)
             .reset_index()
             .pipe(self.roll)
             .pipe(
-                self.normalize_segments,
-                cols=["sms:incoming_count", "sms:outgoing_count"],
-            )
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
+            .pipe(self.normalize_segments, cols=prefixes)
         )
+
         return df
 
     def pivot(self, df):

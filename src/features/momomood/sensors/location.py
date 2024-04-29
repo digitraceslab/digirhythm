@@ -18,6 +18,28 @@ class LocationProcessor(BaseProcessor):
 
         return df
 
+    def rename_features_columns(self, df, prefixes):
+        """
+        Rename columns from time indicators to parts of the day.
+
+        Parameters:
+        - df: pandas.DataFrame with columns to rename.
+
+        Returns:
+        - DataFrame with renamed columns.
+        """
+
+        # Append with sensor name
+
+        df.columns = [
+            f"{self.sensor_name}:{col}{self.col_suffix}"
+            if col not in ["user", "device", "group", "date"]
+            else col
+            for col in df.columns
+        ]
+
+        return df
+
     def converter(self, df, types):
         """
         Convert column data types
@@ -38,15 +60,11 @@ class LocationProcessor(BaseProcessor):
     def extract_features(self) -> pd.DataFrame:
         rule = "1D"
 
-        # Preprocess pipeline
-        df = (
+        # Agg to 5 mins
+        agg_data = (
             self.data.pipe(
                 self.converter, types={"accuracy": float}
             )  # Convert column type
-            .pipe(self.remove_first_last_day)  # Remove first and last day for each user
-            .pipe(
-                self.remove_timezone_info
-            )  # Remove timezone-specific, return naive-timezone timestamp
             .pipe(
                 location.filter_location,
                 remove_disabled=True,
@@ -56,41 +74,61 @@ class LocationProcessor(BaseProcessor):
             .pipe(niimpy.util.aggregate, freq="5T", method_numerical="median")
         )
 
+        agg_data["datetime"] = agg_data.index
+
         config = {}
         config["resample_args"] = {"rule": rule}
 
+        prefixes = [
+            "dist_total",
+            "n_bins",
+            "speed_average",
+            "speed_variance",
+            "speed_max",
+            "variance",
+            "log_variance",
+            "n_sps",
+            "n_static",
+            "n_moving",
+            "n_rare",
+            "n_home",
+            "max_dist_home",
+            "n_transitions",
+            "n_top1",
+            "n_top2",
+            "n_top3",
+            "n_top4",
+            "n_top5",
+            "entropy",
+            "normalized_entropy",
+        ]
+
         df = (
-            df.pipe(
+            agg_data.pipe(self.drop_duplicates_and_sort)
+            .pipe(self.remove_first_last_day)
+            .pipe(self.remove_timezone_info)
+            .pipe(
                 location.extract_features_location,
                 features={
                     location.location_distance_features: config,
                     location.location_significant_place_features: config,
                 },
             )  # call niimpy to extract features with pre-defined time bin
-            .pipe(self.rename_feature_columns)
-            .pipe(self.add_group, self.group)
+            .pipe(
+                lambda x: x.assign(location_proportion_home=x["n_home"] / x["n_bins"])
+            )
+            .pipe(self.add_group, self.group)  # re-add user group
+            .pipe(self.rename_features_columns, prefixes)  # re-add user group
+            .reset_index()
+            .pipe(lambda df: df.rename(columns={"index": "date"}))  # add formatted date
+            .pipe(self.roll)
+            .pipe(
+                self.normalize_within_user, prefixes=prefixes
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, prefixes=prefixes
+            )  # normalize between-user features
         )
-
-        # Some second-level features
-        print(df.columns)
-        # Calculate proportion of time at home
-        df["location:proportion_home"] = df["location:n_home"] / df["location:n_bins"]
-
-        df["date"] = df.index
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=7).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "3ds":
-            df = df.pipe(self.roll, groupby=["user", "group", "device"], days=3).pipe(
-                self.flatten_columns
-            )
 
         return df
 
@@ -100,13 +138,13 @@ class LocationProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
-        df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
+        #        df["hour"] = pd.to_datetime(df.index).dt.strftime("%H")
+        df["date"] = pd.to_datetime(df.index).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
-            columns="hour",
+            index=["user", "device", "group"],
+            columns="date",
             values=[
                 "dist_total",
                 "n_bins",

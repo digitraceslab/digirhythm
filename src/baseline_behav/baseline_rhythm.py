@@ -17,18 +17,10 @@ def path_factory(study, frequency):
     with open("config/features.txt") as f:
         features = json.load(f)
 
-    if study == "corona":
-        interim_path = "data/interim/corona/"
-        sim_path = "data/processed/corona/similarity_matrix/"
-        feature_path = f"data/processed/corona/corona_all_features_{frequency}.csv"
-        f = features[study][frequency]
-    elif study == "momo":
-        interim_path = "data/interim/momo/"
-        sim_path = "data/processed/momo/similarity_matrix/"
-        feature_path = f"data/processed/momo/vector_momo_{frequency}.csv"
-        f = features[study][frequency]
-    else:
-        print("Unrecognize study")
+    interim_path = f"data/interim/{study}/"
+    sim_path = f"data/processed/{study}/similarity_matrix/"
+    feature_path = f"data/processed/{study}/all_features_{frequency}.csv"
+    f = features[study][frequency]
 
     return (interim_path, sim_path, feature_path, f)
 
@@ -145,6 +137,8 @@ def main(cfg: DictConfig):
 
     # Load features vector
     features_df = pd.read_csv(feature_path)
+    for col in features_df.columns:
+        print(col)
     features_df.dropna(inplace=True, subset=features)
 
     # Init result data frame
@@ -161,6 +155,7 @@ def main(cfg: DictConfig):
 
         # Get features from each user
         sample = features_df[features_df[user_id] == uid][features]
+        date = features_df[features_df[user_id] == uid]["date"]
 
         # Stop if user does not have enough data
         if len(sample) < min_sample:
@@ -216,6 +211,7 @@ def main(cfg: DictConfig):
         )
 
         sample["subject_id"] = uid
+        sample["date"] = date
         all_features_df = pd.concat([all_features_df, sample])
 
     # Save all features

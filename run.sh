@@ -13,6 +13,9 @@ srun  --cpus-per-task 4 python3 -m src.features.corona.vectorize_corona vectoriz
 # 3. Compute baseline rhythm
 python3 -m src.baseline_behav.baseline_rhythm baseline_rhythm.study=corona baseline_rhythm.frequency=4epochs baseline_rhythm.method=cluster
 
+# 3.1 Compute outliers
+python3 -m src.baseline_behav.behavioral_outliers outliers.study=corona outliers.frequency=4epochs outliers.method=std outliers.threshold=2
+
 # 4. Create dataset for analysis
 python3 -m src.data.make_dataset 
 

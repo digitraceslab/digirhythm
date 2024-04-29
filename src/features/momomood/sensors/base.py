@@ -47,13 +47,15 @@ class BaseProcessor:
     batt_data: pd.DataFrame = pd.DataFrame()
     screen_path: str = ""
     screen_data: pd.DataFrame = pd.DataFrame()
-
+    col_suffix: str = ""
     groupby_cols = ["user", "device", "group"]
 
     def __post_init__(self) -> None:
         self.data = niimpy.read_sqlite(
             self.path, self.table, tz="Europe/Helsinki", add_group=self.group
         )
+
+        self.col_suffix = "" if self.frequency == "4epochs" else f":{self.frequency}"
 
     def extract_features(self) -> pd.DataFrame:
         """
@@ -107,12 +109,14 @@ class BaseProcessor:
         df = df.sort_values(["user", "date"])
         df.set_index("date", inplace=True)
 
+        print(df.head())
+
         # Roll the dataframe based on frequency
         roll_map = {"14ds": 14, "7ds": 7, "3ds": 3}
 
         days = roll_map.get(self.frequency)
         if days:
-            return (
+            df = (
                 df.groupby(self.groupby_cols)
                 .rolling(days)
                 .agg(["sum", "min", "max", "mean", "std"])
@@ -129,7 +133,7 @@ class BaseProcessor:
 
         return df
 
-    def rename_feature_columns(self, df):
+    def rename_segment_columns(self, df):
         """
         Rename columns from time indicators to parts of the day.
 
@@ -154,27 +158,40 @@ class BaseProcessor:
         # Append with sensor name
         df.columns = [f"{self.sensor_name}:{col}" for col in df.columns]
 
-        # Append suffix to indicate aggregation freq
-        if self.frequency != "4epochs":
-            df.columns = [f"{col}:{self.frequency}" for col in df.columns]
-
+        df.columns = [f"{col}{self.col_suffix}" for col in df.columns]
         return df
 
-    def normalize_numerical(self, df):
+    def sum_segment(self, df, prefixes):
+        for prefix in prefixes:
+            cols = [col for col in df if col.startswith(prefix)]
+            df[f"{prefix}:allday{self.col_suffix}"] = df[cols].sum(axis=1)
+        return df
+
+    def normalize_within_user(self, df, prefixes):
         """
         For each user, create a normalize version of numerical columns
         """
 
-        numerical_columns = df.select_dtypes(
-            include=["float64", "int"]
-        ).columns.tolist()
-        numerical_columns = [col for col in numerical_columns if col != "user"]
+        for prefix in prefixes:
+            cols = [col for col in df if col.startswith(prefix)]
+            for col in cols:
+                df[f"{col}:within_norm"] = df[col].transform(
+                    lambda x: (x - x.min()) / (x.max() - x.min())
+                )
 
-        # Apply min-max normalization and create new columns
-        for col in numerical_columns:
-            df[f"{col}:norm"] = df.groupby(self.groupby_cols)[col].transform(
-                lambda x: (x - x.min()) / (x.max() - x.min())
-            )
+        return df
+
+    def normalize_between_user(self, df, prefixes):
+        """
+        For all users, create a normalize version of numerical columns
+        """
+
+        for prefix in prefixes:
+            cols = [col for col in df if col.startswith(prefix)]
+            for col in cols:
+                df[f"{col}:between_norm"] = df[col].transform(
+                    lambda x: (x - x.min()) / (x.max() - x.min())
+                )
 
         return df
 
@@ -195,8 +212,8 @@ class BaseProcessor:
 
         # Loop through each base column specified in 'cols'
         for col in cols:
-            # Create a new column name for storing the sum of segments
-            sum_col = f"{col}:daily"
+            # Column storing sum of segments
+            sum_col = f"{col}:allday"
 
             # Ok, this code is dirty but I'll let it be
             if self.frequency != "4epochs":
@@ -204,17 +221,17 @@ class BaseProcessor:
                 segment_cols = [
                     f"{col}{segment}:{self.frequency}:sum" for segment in segments
                 ]
-                segment_df = df[segment_cols].copy()
 
             else:
                 segment_cols = [f"{col}{segment}" for segment in segments]
-                segment_df = df[segment_cols].copy()
+
+            segment_df = df[segment_cols].copy()
 
             # Calculate the sum of segment values for each row and store in the new column
             df[sum_col] = segment_df.sum(axis=1)
 
             # Generate column names for the normalized values
-            segment_cols_norm = [f"{col}:norm" for col in segment_cols]
+            segment_cols_norm = [f"{col}:proportion" for col in segment_cols]
 
             # Normalize each segment value by dividing by the sum and store in new normalized columns
             df[segment_cols_norm] = segment_df.div(df[sum_col], axis=0)

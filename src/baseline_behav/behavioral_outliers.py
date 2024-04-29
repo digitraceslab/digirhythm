@@ -15,28 +15,35 @@ from omegaconf import DictConfig, OmegaConf
 import re
 import json
 from sklearn.cluster import KMeans
+from .utils import *
 
 np.set_printoptions(threshold=sys.maxsize)
 
 
 def path_factory(study, frequency, method):
+    """
+    Generates file paths based on study parameters.
+
+    Args:
+    - study (str): The name of the study.
+    - frequency (str): Data collection frequency.
+    - method (str): Methodology for processing data.
+
+    Returns:
+    - tuple: Contains paths to interim data, processed data, all features, baseline data, and features configuration.
+    """
     with open("config/features.txt") as f:
         features = json.load(f)
 
     interim_path = f"data/interim/{study}/"
     processed_path = f"data/processed/{study}/"
-
-    if method == "cluster":
-        feature_path = (
-            f"{interim_path}/all_participants/{frequency}_{method}_all_features.csv"
-        )
-    else:
-        feature_path = f"data/processed/{study}/{study}_all_features_{frequency}.csv"
-
-    baseline_path = f"{interim_path}/all_participants/{frequency}_{method}_baseline.csv"
+    feature_path = (
+        f"{interim_path}all_participants/{frequency}_{method}_all_features.csv"
+    )
+    baseline_path = f"{interim_path}all_participants/{frequency}_{method}_baseline.csv"
     f = features[study][frequency]
 
-    return (interim_path, processed_path, feature_path, baseline_path, f)
+    return interim_path, processed_path, feature_path, baseline_path, f
 
 
 def euclidean_similarity(v):
@@ -59,7 +66,9 @@ def similarity_against_baseline(
         # last indice: distance of baseline against itself
         sim = baseline_similarity[-1][:-1]
         res = features_df.copy()
+
         res["sim_to_baseline"] = sim
+
     elif method == "cluster":
         res = pd.DataFrame()
         for cluster in baseline_df["cluster"].unique():
@@ -83,39 +92,27 @@ def similarity_against_baseline(
     return res
 
 
-def outliers_detection(sim_baseline_df, method, threshold=1.85):
+###### OUTLIERS
+
+
+def outliers_detection(sim_baseline_df, method, outliers_func):
     if method == "si":
-        pass
+        sim_baseline_df["outlier"] = outliers_func(sim_baseline_df["sim_to_baseline"])
+
     elif method == "cluster":
-        # Calculate mean and standard deviation for sim_to_centroid by cluster
-        group_stats = (
-            sim_baseline_df.groupby("cluster")["sim_to_centroid"]
-            .agg(["mean", "std"])
-            .reset_index()
-        )
-
-        # Merge these statistics back to the original dataframe
-        sim_baseline_df = sim_baseline_df.merge(group_stats, on="cluster")
-
-        # Calculate the outlier threshold for each row
-        sim_baseline_df["threshold"] = (
-            sim_baseline_df["mean"] - threshold * sim_baseline_df["std"]
-        )
-
-        # Assign True if sim_to_centroid is below the threshold (i.e., an outlier), else False
-        sim_baseline_df["outlier"] = (
-            sim_baseline_df["sim_to_centroid"] < sim_baseline_df["threshold"]
-        )
-
-        # Drop columns
-        sim_baseline_df = sim_baseline_df.drop(columns=["mean", "std"])
+        # Applying the boxplot function to detect outliers within each cluster
+        sim_baseline_df["outlier"] = sim_baseline_df.groupby("cluster")[
+            "sim_to_centroid"
+        ].transform(outliers_func)
 
     return sim_baseline_df
 
 
 def difference_from_baseline(outliers_df, baseline_df, method, features):
     if method == "si":
-        pass
+        res = outliers_df.copy()
+        res[features] = outliers_df[features] - baseline_df[features].values
+
     elif method == "cluster":
         res = pd.DataFrame()
         for cluster in baseline_df["cluster"].unique():
@@ -133,11 +130,13 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg.baseline_rhythm))
 
     # CONFIG
-    study = cfg.baseline_rhythm.study
-    frequency = cfg.baseline_rhythm.frequency
-    method = cfg.baseline_rhythm.method
-    kernel_size = cfg.baseline_rhythm.kernel_size
-    overlapping_flag = False
+    study = cfg.outliers.study
+    frequency = cfg.outliers.frequency
+    method = cfg.outliers.method
+    outliers_threshold = cfg.outliers.threshold
+
+    # Function used to detect outliers
+    outliers_func = lambda data: std_from_mean(data, threshold=outliers_threshold)
 
     # momo and corona use different naming convention for user id
     user_id = "subject_id" if study == "corona" else "user"
@@ -151,25 +150,32 @@ def main(cfg: DictConfig):
     features_df = pd.read_csv(feature_path)
     features_df.dropna(inplace=True, subset=features)
 
+    # Read baseline behaviour of all users
     baseline_df = pd.read_csv(baseline_path)
+
+    # Prepare a df to store difference from baseline
     all_participants_baseline_diff = pd.DataFrame()
 
     for uid in features_df[user_id].unique():
         sample = features_df[features_df[user_id] == uid]
+        date = features_df[features_df[user_id] == uid]["date"]
+
         sample_baseline = baseline_df[baseline_df[user_id] == uid]
         sample_baseline_diff = (
             sample.pipe(similarity_against_baseline, sample_baseline, method, features)
-            .pipe(outliers_detection, method)
+            .pipe(outliers_detection, method, outliers_func)
             .pipe(difference_from_baseline, sample_baseline, method, features)
         )
 
+        sample_baseline_diff["date"] = date
         all_participants_baseline_diff = pd.concat(
             [all_participants_baseline_diff, sample_baseline_diff]
         )
 
     # Save
     all_participants_baseline_diff.to_csv(
-        f"{processed_path}{frequency}_{method}_diff_baseline.csv", index=False
+        f"{processed_path}{frequency}_{method}_threshold_{outliers_threshold}_diff_baseline.csv",
+        index=False,
     )
 
 
