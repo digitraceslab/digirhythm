@@ -29,6 +29,7 @@ class VectorizeCorona:
         for file in filtered_files:
             df = pd.read_csv(file)
 
+            print(df)
             ids = df[["subject_id", "date"]]
 
             if merged_df is None:

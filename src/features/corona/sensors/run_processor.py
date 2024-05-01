@@ -14,8 +14,8 @@ DATA_PATH = "data/interim/corona/"
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
-    sensor = cfg.corona.sensor
-    frequency = cfg.corona.frequency
+    sensor = cfg.processor.sensor
+    frequency = cfg.processor.frequency
 
     if sensor == "activity":
         processor = ActivityProcessor(

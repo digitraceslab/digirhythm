@@ -80,27 +80,27 @@ class LocationProcessor(BaseProcessor):
         config["resample_args"] = {"rule": rule}
 
         prefixes = [
-            "dist_total",
-            "n_bins",
-            "speed_average",
-            "speed_variance",
-            "speed_max",
-            "variance",
-            "log_variance",
-            "n_sps",
-            "n_static",
-            "n_moving",
-            "n_rare",
-            "n_home",
-            "max_dist_home",
-            "n_transitions",
-            "n_top1",
-            "n_top2",
-            "n_top3",
-            "n_top4",
-            "n_top5",
-            "entropy",
-            "normalized_entropy",
+            "location:dist_total",
+            "location:n_bins",
+            "location:speed_average",
+            "location:speed_variance",
+            "location:speed_max",
+            "location:variance",
+            "location:log_variance",
+            "location:n_sps",
+            "location:n_static",
+            "location:n_moving",
+            "location:n_rare",
+            "location:n_home",
+            "location:max_dist_home",
+            "location:n_transitions",
+            "location:n_top1",
+            "location:n_top2",
+            "location:n_top3",
+            "location:n_top4",
+            "location:n_top5",
+            "location:entropy",
+            "location:normalized_entropy",
         ]
 
         df = (
@@ -115,7 +115,7 @@ class LocationProcessor(BaseProcessor):
                 },
             )  # call niimpy to extract features with pre-defined time bin
             .pipe(
-                lambda x: x.assign(location_proportion_home=x["n_home"] / x["n_bins"])
+                lambda x: x.assign(location_proportion_home=x["n_home"] / x["n_static"])
             )
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.rename_features_columns, prefixes)  # re-add user group

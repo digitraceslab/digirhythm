@@ -109,8 +109,6 @@ class BaseProcessor:
         df = df.sort_values(["user", "date"])
         df.set_index("date", inplace=True)
 
-        print(df.head())
-
         # Roll the dataframe based on frequency
         roll_map = {"14ds": 14, "7ds": 7, "3ds": 3}
 
@@ -187,7 +185,11 @@ class BaseProcessor:
         """
 
         for prefix in prefixes:
-            cols = [col for col in df if col.startswith(prefix)]
+            cols = [
+                col
+                for col in df
+                if col.startswith(prefix) and not col.endswith("within_norm")
+            ]
             for col in cols:
                 df[f"{col}:between_norm"] = df[col].transform(
                     lambda x: (x - x.min()) / (x.max() - x.min())

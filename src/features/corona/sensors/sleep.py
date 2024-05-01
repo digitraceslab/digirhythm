@@ -76,6 +76,7 @@ class SleepProcessor(BaseCoronaProcessor):
         return df
 
     def extract_features(self) -> pd.DataFrame:
+        prefixes = ["tst", "midsleep"]
         df = (
             self.data.pipe(self.convert_timezone)
             .pipe(self.convert_sleepwake_time)
@@ -83,19 +84,14 @@ class SleepProcessor(BaseCoronaProcessor):
             .pipe(self.midsleep)
             .pipe(self.filter_nights)
             .pipe(self.retain_columns)
-            .pipe(self.normalize_features, ["tst", "midsleep"])
-            .pipe(self.drop_duplicates_and_sort)
+            .pipe(self.roll)
+            .pipe(
+                self.normalize_within_user, cols=["tst", "midsleep"]
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, cols=["tst", "midsleep"]
+            )  # normalize between-user features
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["subject_id"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["subject_id"], days=7).pipe(
-                self.flatten_columns
-            )
 
         df.reset_index(inplace=True)
 

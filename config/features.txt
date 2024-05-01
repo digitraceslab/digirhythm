@@ -1,14 +1,14 @@
 {
   "corona": {
     "4epochs": [
-      "heart_rate_variability_avg:norm",
-      "stepsx1000:total:norm",
+      "heart_rate_variability_avg:within_norm",
+      "stepsx1000:total:within_norm",
       "steps:night:norm",
       "steps:morning:norm",
       "steps:afternoon:norm",
       "steps:evening:norm",
-      "tst:norm",
-      "midsleep:norm"
+      "tst:within_norm",
+      "midsleep:within_norm"
     ],
     "7ds": [
       "steps:night:7ds:sum:norm",
@@ -81,18 +81,20 @@
   },
   "momo": {
     "4epochs": [
-      "location:n_sps:norm",
-      "location:entropy:norm",
-      "location:log_variance:norm",
-      "location:proportion_home",
+      "location:n_sps:within_norm",
+      "location:entropy:within_norm",
+      "location:log_variance:within_norm",
+      "location:proportion_home:within_norm",
 
+    "call:outgoing_duration_total:allday:within_norm",
+      "call:outgoing_count:allday:within_norm",
+          "call:incoming_duration_total:allday:within_norm",
+      "call:incoming_count:allday:within_norm",
       
-      "call:duration:total:norm",
-      "call:count:total:norm",
+      "sms:incoming_count:allday:within_norm",
+      "sms:outgoing_count:allday:within_norm",
       
-      "sms:count:total:norm",
-      
-      "screen:screen_use_durationtotal:total:norm"
+      "screen:screen_use_durationtotal:allday:within_norm"
     ],
     "7ds": [],
     "14ds": []

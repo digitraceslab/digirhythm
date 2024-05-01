@@ -15,31 +15,59 @@ class VectorizeMoMo:
     def load_and_merge_dfs(self, merge_keys):
         # Use glob to find all CSV files in the directory
         files = glob.glob(os.path.join(self.directory_path, "*.csv"))
-        excluded_files = ["survey_all.csv"]
 
         result = None
 
+        full_filenames = [
+            "application_14ds.csv",
+            "application_4epochs.csv",
+            "application_7ds.csv",
+            "call_14ds.csv",
+            "call_4epochs.csv",
+            "call_7ds.csv",
+            "location_14ds.csv",
+            "location_4epochs.csv",
+            "location_7ds.csv",
+            "screen_14ds.csv",
+            "screen_4epochs.csv",
+            "screen_7ds.csv",
+            "sms_14ds.csv",
+            "sms_4epochs.csv",
+            "sms_7ds.csv",
+            "PHQ9_scores.csv",
+        ]
+
+        filenames = [
+            "application_4epochs.csv",
+            "call_4epochs.csv",
+            "location_4epochs.csv",
+            "screen_4epochs.csv",
+            "sms_4epochs.csv",
+            "PHQ9_scores.csv",
+        ]
+
         # Loop over files and merge DataFrames
-        for file in files:
-            filename = os.path.basename(file)
+        for f in filenames:
+            file = os.path.join(self.directory_path, f)
+            print(file)
+            df = pd.read_csv(file)
 
-            if filename not in excluded_files:
-                df = pd.read_csv(file)
+            if result is None:
+                result = df
+            else:
+                if not set(merge_keys).issubset(df.columns):
+                    abc = ["user", "group", "date"]
 
-                if result is None:
-                    result = df
                 else:
-                    if not set(merge_keys).issubset(df.columns):
-                        abc = ["user", "group", "date"]
-                        print("nomerge", filename)
-                    else:
-                        abc = merge_keys
-                        print("merge", filename)
+                    abc = merge_keys
 
-                    if filename == "PHQ9_scores.csv":
-                        result = result.merge(df, how="left", on=abc)
-                    else:
-                        result = result.merge(df, how="outer", on=abc)
+                if f == "PHQ9_scores.csv":
+                    result = result.merge(df, how="left", on=abc)
+                else:
+                    result = result.merge(df, how="outer", on=abc)
+
+                del df
+
         return result
 
 
@@ -49,31 +77,12 @@ def main(cfg: DictConfig):
 
     vectorize_momo = VectorizeMoMo()
     merged_df = vectorize_momo.load_and_merge_dfs(
-        merge_keys=["user", "device", "group", "date"]
+        merge_keys=["user", "group", "device", "date"]
     )
 
-    # Filter columns to save based on prefix
-    prefixes = (
-        "user",
-        "group",
-        "device",
-        "date",
-        "location",
-        "sms",
-        "call",
-        "screen",
-        "application",
-        "accelerometer",
-    )
-
-    # Filter columns based on prefixes
-    cols = [col for col in merged_df.columns if col.startswith(prefixes)]
-    filtered_df = merged_df[cols]
-
-    print(filtered_df.shape())
     # Save the data in CSV and Pickle format
-    filtered_df.to_csv(os.path.join(DATA_PATH, "all_features.csv"))
-    filtered_df.to_pickle(os.path.join(DATA_PATH, "all_features.pkl"))
+    merged_df.to_csv(os.path.join(DATA_PATH, "all_features.csv"), index=False)
+    merged_df.to_pickle(os.path.join(DATA_PATH, "all_features.pkl"))
 
 
 if __name__ == "__main__":

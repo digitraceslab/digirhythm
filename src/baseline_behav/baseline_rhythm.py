@@ -19,7 +19,7 @@ def path_factory(study, frequency):
 
     interim_path = f"data/interim/{study}/"
     sim_path = f"data/processed/{study}/similarity_matrix/"
-    feature_path = f"data/processed/{study}/all_features_{frequency}.csv"
+    feature_path = f"data/processed/{study}/all_features.csv"
     f = features[study][frequency]
 
     return (interim_path, sim_path, feature_path, f)

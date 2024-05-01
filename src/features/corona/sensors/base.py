@@ -81,6 +81,25 @@ class BaseCoronaProcessor:
 
         return df
 
+    # Roll over past n days and return summary of aggregated values
+    def roll(self, df):
+        # Sort by date first
+        df = df.sort_values(["subject_id", "date"])
+        df.set_index("date", inplace=True)
+
+        # Roll the dataframe based on frequency
+        roll_map = {"14ds": 14, "7ds": 7, "3ds": 3}
+
+        days = roll_map.get(self.frequency)
+        if days:
+            df = (
+                df.groupby(self.groupby_cols)
+                .rolling(days)
+                .agg(["sum", "min", "max", "mean", "std"])
+                .pipe(self.flatten_columns)
+            )
+        return df
+
     def flatten_columns(self, df):
         """
         Flatten columns if they are 2-level
@@ -118,11 +137,24 @@ class BaseCoronaProcessor:
 
         return df
 
-    def normalize_features(self, df, cols):
-        # Normalize specified features per user and create new columns
+    def normalize_within_user(self, df, cols):
+        """
+        For each user, create a normalize version of numerical columns
+        """
 
-        for feature in cols:
-            df[f"{feature}:norm"] = df.groupby("subject_id")[feature].transform(
+        for col in cols:
+            df[f"{col}:within_norm"] = df.groupby("subject_id")[col].transform(
+                lambda x: (x - x.min()) / (x.max() - x.min())
+            )
+        return df
+
+    def normalize_between_user(self, df, cols):
+        """
+        For all users, create a normalize version of numerical columns
+        """
+
+        for col in cols:
+            df[f"{col}:between_norm"] = df[col].transform(
                 lambda x: (x - x.min()) / (x.max() - x.min())
             )
 

@@ -53,23 +53,16 @@ class ActivityProcessor(BaseCoronaProcessor):
             .pipe(self.flatten_columns)
             .pipe(self.rename_feature_columns)
             .reset_index()
+            .pipe(self.roll)
+            .pipe(self.normalize_segments, cols=["steps", "stepsx1000"])
+            .pipe(
+                self.normalize_within_user, cols=["stepsx1000:total", "steps:total"]
+            )  # normalize within-user features
+            .pipe(
+                self.normalize_between_user, cols=["stepsx1000:total", "steps:total"]
+            )  # normalize between-user features
+            .reset_index()
         )
-
-        # Roll the dataframe based on frequency
-        if self.frequency == "14ds":
-            df = df.pipe(self.roll, groupby=["subject_id"], days=14).pipe(
-                self.flatten_columns
-            )
-        elif self.frequency == "7ds":
-            df = df.pipe(self.roll, groupby=["subject_id"], days=7).pipe(
-                self.flatten_columns
-            )
-
-        # Normalize segmented features
-        df = df.pipe(
-            self.normalize_segments,
-            cols=["steps", "stepsx1000"],
-        ).pipe(self.normalize_features, ["stepsx1000:total", "steps:total"])
 
         return df
 
