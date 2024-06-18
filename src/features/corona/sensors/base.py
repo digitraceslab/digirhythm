@@ -4,7 +4,7 @@ sys.path.append("../../../")
 
 import niimpy
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numpy as np
 
 
@@ -36,7 +36,7 @@ class BaseCoronaProcessor:
     sensor_name: str
     path: str
     frequency: str
-    data: pd.DataFrame = pd.DataFrame()
+    data: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     def __post_init__(self) -> None:
         self.data = pd.read_csv(self.path)

@@ -37,7 +37,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Path folder
-config/paths
+#config/paths
 
 # Unit test / coverage reports
 htmlcov/
@@ -50,7 +50,7 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
-data*
+#data*
 # Translations
 *.mo
 *.pot

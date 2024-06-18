@@ -1,5 +1,5 @@
 from .base import BaseCoronaProcessor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pandas as pd
 from pathlib import Path
 from .util_questionnaire_mapper import *
@@ -14,7 +14,7 @@ class SurveyProcessor:
     sensor_name: str
     frequency: str
     path: str
-    data: pd.DataFrame = pd.DataFrame()
+    data: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     def __post_init__(self) -> None:
         # Merge contents of all dicts into one

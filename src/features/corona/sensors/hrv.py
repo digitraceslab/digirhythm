@@ -1,5 +1,5 @@
 from .base import BaseCoronaProcessor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pandas as pd
 from ....decorators import save_output_with_freq
 from datetime import datetime
