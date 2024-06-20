@@ -4,7 +4,7 @@ srun  --cpus-per-task 4 python3 -m src.features.momomood.sensors.run_processor p
 srun  --cpus-per-task 4 python3 -m src.features.corona.sensors.run_processor processor.sensor=activity processor.frequency=4epochs
 
 srun  --cpus-per-task 4 python3 -m src.features.momomood.eigenbehav.run_processor 
-python3 -m src.features.corona.sensors.run_processor corona.sensor=survey corona.frequency=all
+python3 -m src.features.corona.sensors.run_processor processor.sensor=survey processor.frequency=all
 
 # 2. Vectorize stuffs
 srun  --cpus-per-task 4 python3 -m src.features.momomood.vectorize_momo vectorize.frequency=4epochs
