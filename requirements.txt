@@ -11,3 +11,4 @@ hydra
 omegaconf
 umap
 ipykernel
+polars

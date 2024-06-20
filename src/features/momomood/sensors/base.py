@@ -4,7 +4,7 @@ sys.path.append("../../../")
 
 import niimpy
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numpy as np
 
 
@@ -40,15 +40,15 @@ class BaseProcessor:
     table: str
     group: str
     frequency: str
-    data: pd.DataFrame = pd.DataFrame()
+    data: pd.DataFrame = field(default_factory=pd.DataFrame)
 
     # Optional var
     batt_path: str = ""
-    batt_data: pd.DataFrame = pd.DataFrame()
+    batt_data: pd.DataFrame = field(default_factory=pd.DataFrame)
     screen_path: str = ""
-    screen_data: pd.DataFrame = pd.DataFrame()
+    screen_data: pd.DataFrame = field(default_factory=pd.DataFrame)
     col_suffix: str = ""
-    groupby_cols = ["user", "device", "group"]
+    groupby_cols = ["user", "group"]
 
     def __post_init__(self) -> None:
         self.data = niimpy.read_sqlite(
@@ -73,6 +73,10 @@ class BaseProcessor:
         return data
 
     def remove_first_last_day(self, df):
+
+        # Assert datetime index
+        pd.api.types.is_datetime64_any_dtype(df.index)
+
         # Function to filter out the first and last day for each group
         def filter_days(group):
             # Determine the first and last day
@@ -90,7 +94,7 @@ class BaseProcessor:
 
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
-        df["datetime"] = df["datetime"].dt.tz_localize(None)
+        #df["datetime"] = df["datetime"].dt.tz_localize(None)
         return df
 
     def add_group(self, df, group):

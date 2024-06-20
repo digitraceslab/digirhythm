@@ -1,9 +1,10 @@
 from .base import BaseProcessor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.screen as screen
 from ....decorators import save_output_with_freq
+import polars as pl
 
 DATA_PATH = "data/interim/momo/"
 
@@ -11,7 +12,6 @@ import os
 
 path = os.path.abspath(niimpy.__file__)
 print(path)
-
 
 @dataclass
 class ScreenProcessor(BaseProcessor):
@@ -54,6 +54,7 @@ class ScreenProcessor(BaseProcessor):
             .pipe(self.remove_timezone_info)
         )
 
+        df = pl.from_pandas(self.data)
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -63,6 +64,7 @@ class ScreenProcessor(BaseProcessor):
                 batt_data,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
+            .reset_index()
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -87,12 +89,14 @@ class ScreenProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        df["hour"] = df.index.strftime("%H")
-        df["date"] = df.index.strftime("%Y-%m-%d")
+        df["datetime"] = df["level_1"]
+        print(df["datetime"])
+        df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
+        df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "device", "group"],
+            index=["user", "date", "group"],
             columns="hour",
             values=[
                 "screen_use_durationtotal",

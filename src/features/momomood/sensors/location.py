@@ -4,10 +4,11 @@ import niimpy
 import pandas as pd
 import niimpy.preprocessing.location as location
 from ....decorators import save_output_with_freq
-
+import inspect
 
 @dataclass
 class LocationProcessor(BaseProcessor):
+    
     def rename_feature_columns(self, df):
         df.columns = [
             f"{self.sensor_name}:{col}"
@@ -57,25 +58,38 @@ class LocationProcessor(BaseProcessor):
             remove_zeros=remove_zeros,
         )
 
-    def extract_features(self) -> pd.DataFrame:
-        rule = "1D"
+    def resample(self, df):
 
         # Agg to 5 mins
         agg_data = (
-            self.data.pipe(
+            df.pipe(
                 self.converter, types={"accuracy": float}
             )  # Convert column type
             .pipe(
                 location.filter_location,
                 remove_disabled=True,
-                remove_network=True,
+                remove_network=False,
                 remove_zeros=True,
             )  # Filter disabled and network location
-            .pipe(niimpy.util.aggregate, freq="5T", method_numerical="median")
+            .groupby(self.groupby_cols)
+            .resample('5T').median(numeric_only=True)
+            .reset_index()
         )
+        
+        return agg_data
+        
+    def extract_features(self) -> pd.DataFrame:
+        rule = "1D"
 
-        agg_data["datetime"] = agg_data.index
+        # Agg to 5 mins
+        agg_data = self.resample(self.data)
+        
+        # Rename
+        agg_data.rename(columns={'level_2':'datetime'}, inplace=True)
 
+        # Set datetime index
+        #agg_data.set_index('datetime', inplace=True)
+        
         config = {}
         config["resample_args"] = {"rule": rule}
 
@@ -105,8 +119,10 @@ class LocationProcessor(BaseProcessor):
 
         df = (
             agg_data.pipe(self.drop_duplicates_and_sort)
+            .set_index('datetime')
             .pipe(self.remove_first_last_day)
             .pipe(self.remove_timezone_info)
+            .dropna(subset=['double_longitude', 'double_latitude'])
             .pipe(
                 location.extract_features_location,
                 features={
@@ -120,7 +136,7 @@ class LocationProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.rename_features_columns, prefixes)  # re-add user group
             .reset_index()
-            .pipe(lambda df: df.rename(columns={"index": "date"}))  # add formatted date
+            .pipe(lambda df: df.rename(columns={"datetime": "date"}))  # add formatted date
             .pipe(self.roll)
             .pipe(
                 self.normalize_within_user, prefixes=prefixes
@@ -138,7 +154,6 @@ class LocationProcessor(BaseProcessor):
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
 
-        #        df["hour"] = pd.to_datetime(df.index).dt.strftime("%H")
         df["date"] = pd.to_datetime(df.index).dt.strftime("%Y-%m-%d")
 
         # Pivot the table

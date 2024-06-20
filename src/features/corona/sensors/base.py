@@ -37,7 +37,8 @@ class BaseCoronaProcessor:
     path: str
     frequency: str
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
-
+    
+    
     def __post_init__(self) -> None:
         self.data = pd.read_csv(self.path)
 

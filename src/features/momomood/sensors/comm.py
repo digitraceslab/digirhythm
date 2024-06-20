@@ -7,7 +7,6 @@ from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/momo/"
 
-
 @dataclass
 class CallProcessor(BaseProcessor):
     def extract_features(self) -> pd.DataFrame:
@@ -39,6 +38,7 @@ class CallProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
+            .reset_index()
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -58,13 +58,14 @@ class CallProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
-        df["datetime"] = df.index
+
+        df["datetime"] = df["level_1"]
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group", "device"],
+            index=["user", "date", "group"],
             columns="hour",
             values=[
                 "incoming_count",
@@ -79,7 +80,7 @@ class CallProcessor(BaseProcessor):
 
 
 class SmsProcessor(BaseProcessor):
-    #    @save_output_with_freq(DATA_PATH + "sms", "csv")
+    
     def extract_features(self) -> pd.DataFrame:
         prefixes = ["sms:incoming_count", "sms:outgoing_count"]
         # Agg daily events into 6H bins
@@ -93,6 +94,7 @@ class SmsProcessor(BaseProcessor):
             .pipe(
                 comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
+            .reset_index()
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -112,13 +114,13 @@ class SmsProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
-        df["datetime"] = df.index
+        df["datetime"] = df["level_1"]
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group", "device"],
+            index=["user", "date", "group"],
             columns="hour",
             values=["incoming_count", "outgoing_count"],
             fill_value=0,
