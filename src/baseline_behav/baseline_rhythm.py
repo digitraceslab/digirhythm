@@ -19,7 +19,7 @@ def path_factory(study, frequency):
 
     interim_path = f"data/interim/{study}/"
     sim_path = f"data/processed/{study}/similarity_matrix/"
-    feature_path = f"data/processed/{study}/all_features.csv"
+    feature_path = f"data/processed/{study}/all_features_{frequency}.csv"
     f = features[study][frequency]
 
     return (interim_path, sim_path, feature_path, f)
@@ -137,8 +137,8 @@ def main(cfg: DictConfig):
 
     # Load features vector
     features_df = pd.read_csv(feature_path)
-    for col in features_df.columns:
-        print(col)
+
+    print("Feature null percentage", features_df[features].isnull().mean())
     features_df.dropna(inplace=True, subset=features)
 
     # Init result data frame

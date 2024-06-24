@@ -115,7 +115,7 @@ ENV/
 *.feather
 *.png
 *.parquet
-
+*.pkl
 # Output run
 outputs/
 viz/

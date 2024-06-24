@@ -10,7 +10,6 @@ import numpy as np
 
 @dataclass
 class BaseProcessor:
-
     """
     BaseProcessor is the base class for all sensor processing classes. It provides a structured
     way to handle sensor data processing with support for different frequencies of data
@@ -94,7 +93,7 @@ class BaseProcessor:
 
     def remove_timezone_info(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.tz_localize(None)
-        #df["datetime"] = df["datetime"].dt.tz_localize(None)
+        # df["datetime"] = df["datetime"].dt.tz_localize(None)
         return df
 
     def add_group(self, df, group):

@@ -10,7 +10,6 @@ import numpy as np
 
 @dataclass
 class BaseCoronaProcessor:
-
     """
     BaseProcessor is the base class for all sensor processing classes. It provides a structured
     way to handle sensor data processing with support for different frequencies of data
@@ -37,8 +36,7 @@ class BaseCoronaProcessor:
     path: str
     frequency: str
     data: pd.DataFrame = field(default_factory=pd.DataFrame)
-    
-    
+
     def __post_init__(self) -> None:
         self.data = pd.read_csv(self.path)
 

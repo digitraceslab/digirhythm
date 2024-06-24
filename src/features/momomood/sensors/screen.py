@@ -13,6 +13,7 @@ import os
 path = os.path.abspath(niimpy.__file__)
 print(path)
 
+
 @dataclass
 class ScreenProcessor(BaseProcessor):
     def __post_init__(self, *args, **kwargs):

@@ -83,8 +83,8 @@
     "4epochs": [
       "location:n_sps:within_norm",
       "location:entropy:within_norm",
-      "location:log_variance:within_norm",
-      "location:proportion_home:within_norm",
+      "location:variance:within_norm",
+      "location:location_proportion_home",
 
     "call:outgoing_duration_total:allday:within_norm",
       "call:outgoing_count:allday:within_norm",

@@ -6,14 +6,17 @@ import niimpy.preprocessing.location as location
 from ....decorators import save_output_with_freq
 import inspect
 
+
 @dataclass
 class LocationProcessor(BaseProcessor):
-    
+
     def rename_feature_columns(self, df):
         df.columns = [
-            f"{self.sensor_name}:{col}"
-            if col not in ["user", "date", "device", "group"]
-            else col
+            (
+                f"{self.sensor_name}:{col}"
+                if col not in ["user", "date", "device", "group"]
+                else col
+            )
             for col in df.columns
         ]
 
@@ -33,9 +36,11 @@ class LocationProcessor(BaseProcessor):
         # Append with sensor name
 
         df.columns = [
-            f"{self.sensor_name}:{col}{self.col_suffix}"
-            if col not in ["user", "device", "group", "date"]
-            else col
+            (
+                f"{self.sensor_name}:{col}{self.col_suffix}"
+                if col not in ["user", "device", "group", "date"]
+                else col
+            )
             for col in df.columns
         ]
 
@@ -62,9 +67,7 @@ class LocationProcessor(BaseProcessor):
 
         # Agg to 5 mins
         agg_data = (
-            df.pipe(
-                self.converter, types={"accuracy": float}
-            )  # Convert column type
+            df.pipe(self.converter, types={"accuracy": float})  # Convert column type
             .pipe(
                 location.filter_location,
                 remove_disabled=True,
@@ -72,24 +75,25 @@ class LocationProcessor(BaseProcessor):
                 remove_zeros=True,
             )  # Filter disabled and network location
             .groupby(self.groupby_cols)
-            .resample('5T').median(numeric_only=True)
+            .resample("5T")
+            .median(numeric_only=True)
             .reset_index()
         )
-        
+
         return agg_data
-        
+
     def extract_features(self) -> pd.DataFrame:
         rule = "1D"
 
         # Agg to 5 mins
         agg_data = self.resample(self.data)
-        
+
         # Rename
-        agg_data.rename(columns={'level_2':'datetime'}, inplace=True)
+        agg_data.rename(columns={"level_2": "datetime"}, inplace=True)
 
         # Set datetime index
-        #agg_data.set_index('datetime', inplace=True)
-        
+        # agg_data.set_index('datetime', inplace=True)
+
         config = {}
         config["resample_args"] = {"rule": rule}
 
@@ -119,10 +123,10 @@ class LocationProcessor(BaseProcessor):
 
         df = (
             agg_data.pipe(self.drop_duplicates_and_sort)
-            .set_index('datetime')
+            .set_index("datetime")
             .pipe(self.remove_first_last_day)
             .pipe(self.remove_timezone_info)
-            .dropna(subset=['double_longitude', 'double_latitude'])
+            .dropna(subset=["double_longitude", "double_latitude"])
             .pipe(
                 location.extract_features_location,
                 features={
@@ -136,7 +140,9 @@ class LocationProcessor(BaseProcessor):
             .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.rename_features_columns, prefixes)  # re-add user group
             .reset_index()
-            .pipe(lambda df: df.rename(columns={"datetime": "date"}))  # add formatted date
+            .pipe(
+                lambda df: df.rename(columns={"datetime": "date"})
+            )  # add formatted date
             .pipe(self.roll)
             .pipe(
                 self.normalize_within_user, prefixes=prefixes

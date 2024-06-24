@@ -7,6 +7,7 @@ from ....decorators import save_output_with_freq
 
 DATA_PATH = "data/interim/momo/"
 
+
 @dataclass
 class CallProcessor(BaseProcessor):
     def extract_features(self) -> pd.DataFrame:
@@ -80,7 +81,7 @@ class CallProcessor(BaseProcessor):
 
 
 class SmsProcessor(BaseProcessor):
-    
+
     def extract_features(self) -> pd.DataFrame:
         prefixes = ["sms:incoming_count", "sms:outgoing_count"]
         # Agg daily events into 6H bins

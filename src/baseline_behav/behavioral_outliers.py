@@ -156,6 +156,7 @@ def main(cfg: DictConfig):
     # Prepare a df to store difference from baseline
     all_participants_baseline_diff = pd.DataFrame()
 
+    print(features_df.head())
     for uid in features_df[user_id].unique():
         sample = features_df[features_df[user_id] == uid]
         date = features_df[features_df[user_id] == uid]["date"]

@@ -21,7 +21,7 @@ python3 -m src.data.make_dataset
 
 ### Util script
 # Folder backup
-rsync -av --progress data/ data.backup
+rsync -av --progress data/ ../digirihythm.data.backup
 
 ### Rapids on the queue
 #!/bin/bash

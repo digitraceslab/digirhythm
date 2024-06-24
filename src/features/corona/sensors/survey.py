@@ -10,7 +10,9 @@ pd.set_option("future.no_silent_downcasting", True)
 
 # Pretty cool read: https://stackoverflow.com/questions/68292862/performancewarning-dataframe-is-highly-fragmented-this-is-usually-the-result-o
 from warnings import simplefilter
+
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
+
 
 @dataclass
 class SurveyProcessor:

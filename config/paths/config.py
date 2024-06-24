@@ -16,7 +16,7 @@ paths = {
     "mmm-mdd": {},
     "pilot-control": {},
     "pilot-patient": {},
-    "corona": {}
+    "corona": {},
 }
 
 # Get the sample data path
@@ -30,7 +30,7 @@ print(sample_data_path)
 corona_paths = config["corona"]
 for key in corona_paths:
     paths["corona"][key] = corona_data_path + corona_paths[key]
-    
+
 # Get the paths for mmm-bd
 pilot_control_paths = config["pilot-control"]
 for key in pilot_control_paths:
