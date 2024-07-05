@@ -38,6 +38,7 @@ class VectorizeMoMo:
         ]
 
         filenames = [
+            "accelerometer_4epochs.csv",
             "application_4epochs.csv",
             "call_4epochs.csv",
             "location_4epochs.csv",
@@ -77,7 +78,7 @@ def main(cfg: DictConfig):
 
     vectorize_momo = VectorizeMoMo()
     merged_df = vectorize_momo.load_and_merge_dfs(
-        merge_keys=["user", "group", "device", "date"]
+        merge_keys=["user", "group", "date"]
     )
 
     # Save the data in CSV and Pickle format

@@ -29,10 +29,15 @@ class AccelerometerProcessor(BaseProcessor):
         res = df.groupby(self.groupby_cols).resample(rule).agg(agg_dict)
 
         res.columns = ["_".join(col).strip() for col in res.columns.values]
+        
         res.reset_index(inplace=True)
 
-        res = res.set_index("level_3")
-
+        # Rename index
+        #res.rename(columns={"level_2": "date"}, inplace=True)
+        res.set_index('level_2', inplace=True)
+        res.index.name = None
+        print(res.head())
+        
         return res
 
     def rename_cols(self, df):
@@ -70,6 +75,7 @@ class AccelerometerProcessor(BaseProcessor):
 
         self.data = self.data.sort_index()
 
+        '''
         df = (
             self.data.pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
@@ -85,7 +91,8 @@ class AccelerometerProcessor(BaseProcessor):
             .reset_index()
             # .pipe(self.roll)
         )
-
+        '''
+        
         # Agg daily events into 6H bins
         rule = "1D"
 
@@ -100,14 +107,14 @@ class AccelerometerProcessor(BaseProcessor):
             .pipe(self.resample_data, rule, agg_dict)
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
-            .pipe(self.rename_feature_columns)
+            #.pipe(self.rename_feature_columns)
             .reset_index()
             # .pipe(self.roll)
         )
 
-        df = df.merge(ddf, on=["user", "group", "device", "date"]).pipe(self.roll)
+        #df = df.merge(ddf, on=["user", "group", "date"]).pipe(self.roll)
 
-        return df
+        return ddf
 
     def pivot(self, df):
         """
@@ -120,7 +127,7 @@ class AccelerometerProcessor(BaseProcessor):
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "device", "group"],
+            index=["user", "date", "group"],
             columns="hour",
             values=[
                 "x_mean",

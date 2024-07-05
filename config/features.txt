@@ -81,22 +81,20 @@
   },
   "momo": {
     "4epochs": [
-      "location:n_sps:within_norm",
-      "location:entropy:within_norm",
-      "location:variance:within_norm",
-      "location:location_proportion_home",
+      
 
-    "call:outgoing_duration_total:allday:within_norm",
-      "call:outgoing_count:allday:within_norm",
-          "call:incoming_duration_total:allday:within_norm",
-      "call:incoming_count:allday:within_norm",
-      
-      "sms:incoming_count:allday:within_norm",
-      "sms:outgoing_count:allday:within_norm",
-      
+        "call:total_duration:allday:within_norm",
+"sms:total_count:allday:within_norm",
       "screen:screen_use_durationtotal:allday:within_norm"
     ],
-    "7ds": [],
+    "7ds": ["location:n_sps:within_norm",
+      "location:entropy:within_norm",
+      "location:location_proportion_home",
+
+        "accelerometer:magnitude_std:morning",
+"accelerometer:magnitude_std:afternoon",
+"accelerometer:magnitude_std:evening",
+"accelerometer:magnitude_std:night_x"],
     "14ds": []
   }
 }
