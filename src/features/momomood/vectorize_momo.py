@@ -77,9 +77,7 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     vectorize_momo = VectorizeMoMo()
-    merged_df = vectorize_momo.load_and_merge_dfs(
-        merge_keys=["user", "group", "date"]
-    )
+    merged_df = vectorize_momo.load_and_merge_dfs(merge_keys=["user", "group", "date"])
 
     # Save the data in CSV and Pickle format
     merged_df.to_csv(os.path.join(DATA_PATH, "all_features.csv"), index=False)

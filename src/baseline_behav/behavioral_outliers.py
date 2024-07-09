@@ -139,7 +139,7 @@ def main(cfg: DictConfig):
     outliers_func = lambda data: std_from_mean(data, threshold=outliers_threshold)
 
     # momo and corona use different naming convention for user id
-    user_id = "subject_id" # if study == "corona" else "user"
+    user_id = "subject_id"  # if study == "corona" else "user"
 
     # Get paths and features
     interim_path, processed_path, feature_path, baseline_path, features = path_factory(

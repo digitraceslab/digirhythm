@@ -17,12 +17,16 @@ paths = {
     "pilot-control": {},
     "pilot-patient": {},
     "corona": {},
+    "tesserae": {},
+    "dtu": {},
 }
 
 # Get the sample data path
 sample_data_path = config.get("root", "data")
 pilot_data_path = config.get("root", "pilot_data")
 corona_data_path = config.get("root", "corona_data")
+tesserae_data_path = config.get("root", "tesserae_data")
+dtu_data_path = config.get("root", "dtu_data")
 
 print(sample_data_path)
 
@@ -78,6 +82,17 @@ for key in mmm_mdd_paths:
 paths["mmm-mdd"]["location"] = (
     config.get("root", "location_data") + mmm_mdd_paths["Location"]
 )
+
+# Get the paths for tessarae
+tess_paths = config["tesserae"]
+for key in tess_paths:
+    paths["tesserae"][key] = tesserae_data_path + tess_paths[key]
+
+# Get the paths for dtu
+dtu_paths = config["dtu"]
+for key in dtu_paths:
+    paths["dtu"][key] = dtu_data_path + dtu_paths[key]
+
 
 # Export the paths dictionary
 PATHS = paths
