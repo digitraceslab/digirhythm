@@ -12,10 +12,12 @@ class CallProcessor(BaseProcessor):
 
     def compute_total_call(self, df) -> pd.DataFrame:
         print(df.columns)
-        df['total_count'] = df['outgoing_count'] + df['incoming_count']
-        df['total_duration'] = df['outgoing_duration_total'] + df['incoming_duration_total']
+        df["total_count"] = df["outgoing_count"] + df["incoming_count"]
+        df["total_duration"] = (
+            df["outgoing_duration_total"] + df["incoming_duration_total"]
+        )
         return df
-        
+
     def extract_features(self) -> pd.DataFrame:
         prefixes = [
             "call:incoming_count",
@@ -23,7 +25,7 @@ class CallProcessor(BaseProcessor):
             "call:incoming_duration_total",
             "call:outgoing_duration_total",
             "call:total_count",
-            "call:total_duration"
+            "call:total_duration",
         ]
 
         # Agg daily events into 6H bins
@@ -82,7 +84,7 @@ class CallProcessor(BaseProcessor):
                 "incoming_duration_total",
                 "outgoing_duration_total",
                 "total_count",
-                "total_duration"
+                "total_duration",
             ],
             fill_value=0,
         )

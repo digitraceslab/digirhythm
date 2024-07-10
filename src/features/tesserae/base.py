@@ -67,7 +67,7 @@ class BaseProcessor:
     def set_datetime_index(self, df) -> pd.DataFrame:
 
         # Set datatime
-        df["datetime"] = pd.to_datetime(df["datetime"], format='mixed')
+        df["datetime"] = pd.to_datetime(df["datetime"], format="mixed")
         # df['time'] = df['datetime']
         df.set_index(df["datetime"], inplace=True)
         df.index.name = None
