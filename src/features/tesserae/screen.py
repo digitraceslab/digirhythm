@@ -3,70 +3,52 @@ from dataclasses import dataclass, field
 import niimpy
 import pandas as pd
 import niimpy.preprocessing.screen as screen
-from ....decorators import save_output_with_freq
-import polars as pl
 
-DATA_PATH = "data/interim/momo/"
+import polars as pl
 
 import os
 
 path = os.path.abspath(niimpy.__file__)
 print(path)
 
-
 @dataclass
 class ScreenProcessor(BaseProcessor):
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
-        self.batt_data = niimpy.read_sqlite(
-            self.batt_path,
-            table="awarebattery",
-            tz="Europe/Helsinki",
-            add_group=self.group,
-        )
 
     def extract_features(self) -> pd.DataFrame:
         prefixes = [
             "screen:screen_use_durationtotal",
-            "screen:screen_off_durationtotal",
-            "screen:screen_on_durationtotal",
-            "screen:screen_on_count",
-            "screen:screen_off_count",
-            "screen:screen_use_count",
         ]
 
         # Agg daily events into 6H bins
         rule = "6H"
 
+        empty_batt_data = pd.DataFrame()
+        
         wrapper_features = {
             screen.screen_duration: {
                 "screen_column_name": "screen_status",
                 "resample_args": {"rule": rule},
-            },
-            screen.screen_count: {
-                "screen_column_name": "screen_status",
-                "resample_args": {"rule": rule},
-            },
+            }
         }
 
-        batt_data = (
-            self.batt_data.pipe(self.drop_duplicates_and_sort)
-            .pipe(self.remove_first_last_day)
-            .pipe(self.remove_timezone_info)
-        )
-
-        print(self.data.head())
+        # TODO: remove later
+        def get_first_1000_rows(df):
+            res = df.head(1000)
+            res.to_csv('adsf.csv')
+            return df.head(10000)
+            
         df = (
-            self.data.pipe(self.drop_duplicates_and_sort)
+            self.data.pipe(self.set_datetime_index)
+            .pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
-            .pipe(self.remove_timezone_info)
             .pipe(
                 screen.extract_features_screen,
-                batt_data,
+                empty_batt_data,
                 features=wrapper_features,
             )  # call niimpy to extract features with pre-defined time bin
             .reset_index()
-            .pipe(self.add_group, self.group)  # re-add user group
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_segment_columns)
@@ -89,23 +71,20 @@ class ScreenProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
+        df.rename(columns={'level_0': 'device', 'level_1': 'user', 'level_2': 'datetime'}, inplace=True)
+        
+        print(df.head())
+        df.to_csv("adf.csv")
 
-        df["datetime"] = df["level_1"]
-        print(df["datetime"])
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
         # Pivot the table
         pivoted_df = df.pivot_table(
-            index=["user", "date", "group"],
+            index=["user", "date"],
             columns="hour",
             values=[
                 "screen_use_durationtotal",
-                "screen_off_durationtotal",
-                "screen_on_durationtotal",
-                "screen_on_count",
-                "screen_off_count",
-                "screen_use_count",
             ],
             fill_value=0,
         )

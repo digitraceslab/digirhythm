@@ -12,3 +12,12 @@ def timing(f):
         return result
 
     return wrap
+
+def progress_decorator(func):
+    def wrapper(self, *args, **kwargs):
+        action_name = func.__name__.replace('_', ' ').capitalize()
+        print(f"{'='*20} Starting: {action_name} {'='*10}")
+        result = func(self, *args, **kwargs)
+        print(f"{'='*20} Completed: {action_name} {'='*10}")       
+        return result
+    return wrapper
