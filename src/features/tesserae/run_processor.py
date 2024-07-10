@@ -1,10 +1,13 @@
 from config import PATHS
-#from .comm import CallProcessor, SmsProcessor
+
+# from .comm import CallProcessor, SmsProcessor
 from .screen import ScreenProcessor
+from .call import CallProcessor
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
 DATA_PATH = "data/interim/tesserae/"
+
 
 @hydra.main(version_base=None, config_path="../../../config", config_name="config")
 def main(cfg: DictConfig):
@@ -18,13 +21,13 @@ def main(cfg: DictConfig):
     if sensor == "screen":
         processor = ScreenProcessor(
             sensor_name="screen",
-            path=PATHS['tesserae']["tessawarescreen"],
+            path=PATHS["tesserae"]["tessawarescreen"],
             frequency=frequency,
         )
     elif sensor == "call":
         processor = CallProcessor(
             sensor_name="call",
-            path=PATHS['tesserae']["tessawarescall"],
+            path=PATHS["tesserae"]["tessawarecall"],
             frequency=frequency,
         )
     else:

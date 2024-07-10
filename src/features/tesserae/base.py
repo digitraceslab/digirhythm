@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.append("../../")
 
 import niimpy
@@ -7,6 +8,7 @@ import pandas as pd
 from dataclasses import dataclass, field
 import numpy as np
 from util import progress_decorator
+
 
 @dataclass
 class BaseProcessor:
@@ -46,14 +48,14 @@ class BaseProcessor:
 
         # Extract the file extension from the path
         _, file_extension = os.path.splitext(self.path)
-        
+
         # Convert the file extension to lowercase to handle cases like '.CSV'
         file_extension = file_extension.lower()
-        
+
         # Choose the appropriate Pandas function based on the file extension
-        if file_extension == '.csv':
+        if file_extension == ".csv":
             self.data = pd.read_csv(self.path)
-        elif file_extension == '.parquet':
+        elif file_extension == ".parquet":
             self.data = pd.read_parquet(self.path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
@@ -65,9 +67,9 @@ class BaseProcessor:
     def set_datetime_index(self, df) -> pd.DataFrame:
 
         # Set datatime
-        df['datetime'] = pd.to_datetime(df['datetime'])
-        #df['time'] = df['datetime']
-        df.set_index(df['datetime'], inplace=True)
+        df["datetime"] = pd.to_datetime(df["datetime"], format='mixed')
+        # df['time'] = df['datetime']
+        df.set_index(df["datetime"], inplace=True)
         df.index.name = None
 
         return df

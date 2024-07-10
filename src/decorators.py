@@ -1,6 +1,7 @@
 import pandas as pd
 import functools
 
+
 def save_output_with_freq(file_name, file_type="csv"):
     def decorator(func):
         @functools.wraps(func)

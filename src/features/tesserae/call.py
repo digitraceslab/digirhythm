@@ -1,55 +1,53 @@
 from .base import BaseProcessor
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import niimpy
 import pandas as pd
-import niimpy.preprocessing.screen as screen
+import niimpy.preprocessing.communication as comm
 
-import polars as pl
-
-import os
-
-path = os.path.abspath(niimpy.__file__)
-print(path)
+DATA_PATH = "data/interim/momo/"
 
 
 @dataclass
-class ScreenProcessor(BaseProcessor):
-    def __post_init__(self, *args, **kwargs):
-        super().__post_init__(*args, **kwargs)
+class CallProcessor(BaseProcessor):
 
+    def compute_total_call(self, df) -> pd.DataFrame:
+        print(df.columns)
+        df['total_count'] = df['outgoing_count'] + df['incoming_count']
+        df['total_duration'] = df['outgoing_duration_total'] + df['incoming_duration_total']
+        return df
+        
     def extract_features(self) -> pd.DataFrame:
         prefixes = [
-            "screen:screen_use_durationtotal",
+            "call:incoming_count",
+            "call:outgoing_count",
+            "call:incoming_duration_total",
+            "call:outgoing_duration_total",
+            "call:total_count",
+            "call:total_duration"
         ]
 
         # Agg daily events into 6H bins
         rule = "6H"
 
-        empty_batt_data = pd.DataFrame()
-
         wrapper_features = {
-            screen.screen_duration: {
-                "screen_column_name": "screen_status",
+            comm.call_count: {
+                "communication_column_name": "call_duration",
                 "resample_args": {"rule": rule},
-            }
+            },
+            comm.call_duration_total: {
+                "communication_column_name": "call_duration",
+                "resample_args": {"rule": rule},
+            },
         }
 
-        # TODO: remove later
-        def get_first_1000_rows(df):
-            res = df.head(1000)
-            res.to_csv("adsf.csv")
-            return df.head(10000)
-
-        self.data.head(1000).to_csv("adsf.csv")
         df = (
             self.data.pipe(self.set_datetime_index)
             .pipe(self.drop_duplicates_and_sort)
             .pipe(self.remove_first_last_day)
             .pipe(
-                screen.extract_features_screen,
-                empty_batt_data,
-                features=wrapper_features,
+                comm.extract_features_comms, features=wrapper_features
             )  # call niimpy to extract features with pre-defined time bin
+            .pipe(self.compute_total_call)
             .reset_index()
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
@@ -69,18 +67,8 @@ class ScreenProcessor(BaseProcessor):
         return df
 
     def pivot(self, df):
-        """
-        Pivot dataframe so that features are spread across columns
-        Example: screen_use_00, screen_use_01, ..., screen_use_23
-        """
-        df.rename(
-            columns={"level_0": "device", "level_1": "user", "level_2": "datetime"},
-            inplace=True,
-        )
 
-        print(df.head())
-        df.to_csv("adf.csv")
-
+        df["datetime"] = df["index"]
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 
@@ -89,7 +77,12 @@ class ScreenProcessor(BaseProcessor):
             index=["user", "date"],
             columns="hour",
             values=[
-                "screen_use_durationtotal",
+                "incoming_count",
+                "outgoing_count",
+                "incoming_duration_total",
+                "outgoing_duration_total",
+                "total_count",
+                "total_duration"
             ],
             fill_value=0,
         )
