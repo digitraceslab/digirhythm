@@ -30,7 +30,7 @@ class CallProcessor(BaseProcessor):
 
         # Agg daily events into 6H bins
         rule = "6H"
-
+        
         wrapper_features = {
             comm.call_count: {
                 "communication_column_name": "call_duration",
@@ -54,7 +54,7 @@ class CallProcessor(BaseProcessor):
             .pipe(self.pivot)
             .pipe(self.flatten_columns)
             .pipe(self.rename_segment_columns)
-            .pipe(self.sum_segment, prefixes=prefixes)
+            .pipe(self.sum_segment, prefixes=prefixes) # sum all segments to acquire a daily value
             .reset_index()
             .pipe(self.roll)
             .pipe(
@@ -66,11 +66,15 @@ class CallProcessor(BaseProcessor):
             .pipe(self.normalize_segments, cols=prefixes)
         )
 
+        for col in df.columns:
+            print(col)
+            
         return df
 
     def pivot(self, df):
 
         df["datetime"] = df["index"]
+
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
 

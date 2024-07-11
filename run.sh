@@ -1,11 +1,11 @@
 ### Analysis pipeline
 # 1. Process sensor with predetermined frequency
-srun  --cpus-per-task 4 python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
-srun  --cpus-per-task 4 python3 -m src.features.corona.sensors.run_processor processor.sensor=activity processor.frequency=4epochs
-python3 -m src.features.tesserae.run_processor processor.sensor=screen processor.frequency=4epochs
+srun --mem=80GB python3 -m src.features.momomood.sensors.run_processor processor.sensor=call processor.frequency=4epochs
+srun --mem=80GB python3 -m src.features.corona.sensors.run_processor processor.sensor=activity processor.frequency=4epochs
+srun --mem=80GB python3 -m src.features.tesserae.run_processor processor.sensor=screen processor.frequency=4epochs
 
-srun  --cpus-per-task 4 python3 -m src.features.momomood.eigenbehav.run_processor 
-python3 -m src.features.corona.sensors.run_processor processor.sensor=survey processor.frequency=all
+srun --mem=80GB python3 -m src.features.momomood.eigenbehav.run_processor 
+srun --mem=80GB python3 -m src.features.corona.sensors.run_processor processor.sensor=survey processor.frequency=all
 
 # 2. Vectorize stuffs
 srun  --cpus-per-task 4 python3 -m src.features.momomood.vectorize_momo vectorize.frequency=4epochs

@@ -17,9 +17,24 @@ class ScreenProcessor(BaseProcessor):
     def __post_init__(self, *args, **kwargs):
         super().__post_init__(*args, **kwargs)
 
+    def convert_copenhagen_time(self, df) -> pd.DataFrame():
+
+        # Convert the 'datetime' column from milliseconds to a datetime object
+        df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+
+        # Set timezone to UTC (assuming the timestamps are in UTC)
+        df['datetime'] = df['datetime'].dt.tz_localize('UTC')
+        
+        # Convert to Copenhagen time (CET/CEST)
+        df['datetime'] = df['datetime'].dt.tz_convert('Europe/Copenhagen')
+
+        return df
+        
     def extract_features(self) -> pd.DataFrame:
+
         prefixes = [
-            "screen:screen_use_durationtotal",
+            "screen:screen_on_durationtotal",
+            "screen:screen_off_durationtotal"
         ]
 
         # Agg daily events into 6H bins
@@ -34,17 +49,13 @@ class ScreenProcessor(BaseProcessor):
             }
         }
 
-        # TODO: remove later
-        def get_first_1000_rows(df):
-            res = df.head(1000)
-            res.to_csv("adsf.csv")
-            return df.head(10000)
-
-        self.data.head(1000).to_csv("adsf.csv")
+        def  head(df):
+            return df.head(1000)
         df = (
-            self.data.pipe(self.set_datetime_index)
-            .pipe(self.drop_duplicates_and_sort)
+            self.data.pipe(self.convert_copenhagen_time)
+            .pipe(self.set_datetime_index)
             .pipe(self.remove_first_last_day)
+            .pipe(self.drop_duplicates_and_sort)
             .pipe(
                 screen.extract_features_screen,
                 empty_batt_data,
@@ -73,13 +84,12 @@ class ScreenProcessor(BaseProcessor):
         Pivot dataframe so that features are spread across columns
         Example: screen_use_00, screen_use_01, ..., screen_use_23
         """
-        df.rename(
-            columns={"level_0": "user", "level_1": "device", "level_2": "datetime"},
-            inplace=True,
-        )
 
         print(df.head())
-        df.to_csv("adf.csv")
+        df.rename(
+            columns={"level_0": "device", "level_1": "user", "level_2": "datetime"},
+            inplace=True,
+        )
 
         df["hour"] = pd.to_datetime(df["datetime"]).dt.strftime("%H")
         df["date"] = pd.to_datetime(df["datetime"]).dt.strftime("%Y-%m-%d")
@@ -89,7 +99,8 @@ class ScreenProcessor(BaseProcessor):
             index=["user", "date"],
             columns="hour",
             values=[
-                "screen_use_durationtotal",
+                "screen_on_durationtotal",
+                "screen_off_durationtotal",
             ],
             fill_value=0,
         )

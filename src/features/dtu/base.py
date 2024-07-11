@@ -54,13 +54,14 @@ class BaseProcessor:
 
         # Choose the appropriate Pandas function based on the file extension
         if file_extension == ".csv":
-            self.data = pd.read_csv(self.path)
+            self.data = pd.read_csv(self.path, dtype={'user':'str'})
         elif file_extension == ".parquet":
             self.data = pd.read_parquet(self.path)
         else:
             raise ValueError(f"Unsupported file type: {file_extension}")
 
-        print(self.data.head())
+        # Set the data types for the columns
+        
         self.col_suffix = "" if self.frequency == "4epochs" else f":{self.frequency}"
 
     @progress_decorator
@@ -88,7 +89,8 @@ class BaseProcessor:
     @progress_decorator
     def drop_duplicates_and_sort(self, data: pd.DataFrame) -> pd.DataFrame:
         data.sort_values(by=["user", "datetime"], inplace=True)
-        data = data.drop_duplicates(["user", "datetime"])
+        #data = data.drop_duplicates(["user", "datetime"])
+        
         return data
 
     @progress_decorator

@@ -52,12 +52,14 @@ def convert_call_tess_aware(path):
 
 @timing
 def convert_dtu_aware(path):
+
     df = (
         pl.read_csv(path, schema_overrides={"new_id": pl.String}).with_columns(
             (pl.col("new_id") + "d").alias("device")
         )
-    ).rename({"new_id": "user", "new_timestamp": "time", "screen_on": "screen_status"})
+    ).rename({"new_id": "user", "new_timestamp": "datetime", "screen_on": "screen_status"})
 
+    print(df.head())
     return df
 
 
@@ -66,12 +68,12 @@ def convert_dtu_aware(path):
 # screen_tess_aware = convert_screen_tess_aware(tess_lock_path)
 # screen_tess_aware.write_parquet(raw_path + "tesserae/tess_aware_screen.parquet" )
 
-# dtu_screen_path = PATHS["dtu"]["screen"]
-# screen_dtu_aware = convert_dtu_aware(dtu_screen_path)
-# screen_dtu_aware.write_parquet(raw_path + "dtu/dtu_aware_screen.parquet")
+dtu_screen_path = PATHS["dtu"]["screen"]
+screen_dtu_aware = convert_dtu_aware(dtu_screen_path)
+screen_dtu_aware.write_parquet(raw_path + "dtu/dtu_aware_screen.parquet")
 
 # call = niimpy.read_sqlite(PATHS["mmm-control"]["awarecalls"], table='AwareCalls')
 # print(call.head())
 
-df = convert_call_tess_aware(PATHS["tesserae"]["call"])
-df.write_parquet(raw_path + "tesserae/tesserae_aware_call.parquet")
+#df = convert_call_tess_aware(PATHS["tesserae"]["call"])
+#df.write_parquet(raw_path + "tesserae/tesserae_aware_call.parquet")

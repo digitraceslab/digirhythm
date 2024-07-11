@@ -10,24 +10,6 @@
       "tst:within_norm",
       "midsleep:within_norm"
     ],
-    "7ds": [
-      "steps:night:7ds:sum:norm",
-      "steps:morning:7ds:sum:norm",
-      "steps:afternoon:7ds:sum:norm",
-      "steps:evening:7ds:sum:norm",
-      "tst:norm:mean",
-      "midsleep:norm:mean",
-      "heart_rate_variability_avg:mean:norm"
-    ],
-    "14ds": [
-      "steps:night:14ds:sum:norm",
-      "steps:morning:14ds:sum:norm",
-      "steps:afternoon:14ds:sum:norm",
-      "steps:evening:14ds:sum:norm",
-      "tst:mean",
-      "midsleep:mean",
-      "heart_rate_variability_avg:mean"
-    ],
     "wellbeing_7ds" : [
     
       "subject_id",
@@ -53,31 +35,6 @@
       "BIG5_Neuroticism", 
       "BIG5_Openness"
     ],
-    "wellbeing_14ds" : [
-    
-      "subject_id",
-      "steps:night:14ds:sum:norm",
-      "steps:morning:14ds:sum:norm",
-      "steps:afternoon:14ds:sum:norm",
-      "steps:evening:14ds:sum:norm",
-      "steps:total:norm",
-      "tst:norm:mean",
-      "midsleep:norm:mean",
-      "heart_rate_variability_avg:mean:norm",
-      "age",
-      "gender",
-      "occupation",
-      "origin",
-      "MEQ",
-      "PSS",
-      "PSQI",
-      "PHQ",
-      "BIG5_Extraversion", 
-      "BIG5_Agreeableness", 
-      "BIG5_Conscientiousness", 
-      "BIG5_Neuroticism", 
-      "BIG5_Openness"
-    ]
   },
   "momo": {
     "4epochs": [
@@ -97,4 +54,12 @@
 "accelerometer:magnitude_std:night_x"],
     "14ds": []
   }
+
+    "tesserae" : {
+        "4epochs" : [
+
+            "call:total_duration:allday:within_norm",
+            "screen:total_duration:allday:within_norm"
+        ]
+    }
 }
