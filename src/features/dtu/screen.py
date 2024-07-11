@@ -20,22 +20,19 @@ class ScreenProcessor(BaseProcessor):
     def convert_copenhagen_time(self, df) -> pd.DataFrame():
 
         # Convert the 'datetime' column from milliseconds to a datetime object
-        df['datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+        df["datetime"] = pd.to_datetime(df["datetime"], unit="ms")
 
         # Set timezone to UTC (assuming the timestamps are in UTC)
-        df['datetime'] = df['datetime'].dt.tz_localize('UTC')
-        
+        df["datetime"] = df["datetime"].dt.tz_localize("UTC")
+
         # Convert to Copenhagen time (CET/CEST)
-        df['datetime'] = df['datetime'].dt.tz_convert('Europe/Copenhagen')
+        df["datetime"] = df["datetime"].dt.tz_convert("Europe/Copenhagen")
 
         return df
-        
+
     def extract_features(self) -> pd.DataFrame:
 
-        prefixes = [
-            "screen:screen_on_durationtotal",
-            "screen:screen_off_durationtotal"
-        ]
+        prefixes = ["screen:screen_on_durationtotal", "screen:screen_off_durationtotal"]
 
         # Agg daily events into 6H bins
         rule = "6H"
@@ -49,8 +46,9 @@ class ScreenProcessor(BaseProcessor):
             }
         }
 
-        def  head(df):
+        def head(df):
             return df.head(1000)
+
         df = (
             self.data.pipe(self.convert_copenhagen_time)
             .pipe(self.set_datetime_index)

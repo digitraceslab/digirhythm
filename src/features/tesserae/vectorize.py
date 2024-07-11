@@ -43,14 +43,14 @@ class VectorizeTesserae:
         for f in filenames:
             file = os.path.join(self.directory_path, f)
             print(file)
-            df = pd.read_csv(file, dtype={'user': 'str'}, parse_dates=['date'])
+            df = pd.read_csv(file, dtype={"user": "str"}, parse_dates=["date"])
 
             print(df.date.unique())
             if result is None:
                 result = df.copy()
             else:
                 result = result.merge(df, on=["user", "date"])
-                
+
         for col in result.columns:
             print(col)
         return result

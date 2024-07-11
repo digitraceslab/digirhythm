@@ -57,7 +57,9 @@ def convert_dtu_aware(path):
         pl.read_csv(path, schema_overrides={"new_id": pl.String}).with_columns(
             (pl.col("new_id") + "d").alias("device")
         )
-    ).rename({"new_id": "user", "new_timestamp": "datetime", "screen_on": "screen_status"})
+    ).rename(
+        {"new_id": "user", "new_timestamp": "datetime", "screen_on": "screen_status"}
+    )
 
     print(df.head())
     return df
@@ -75,5 +77,5 @@ screen_dtu_aware.write_parquet(raw_path + "dtu/dtu_aware_screen.parquet")
 # call = niimpy.read_sqlite(PATHS["mmm-control"]["awarecalls"], table='AwareCalls')
 # print(call.head())
 
-#df = convert_call_tess_aware(PATHS["tesserae"]["call"])
-#df.write_parquet(raw_path + "tesserae/tesserae_aware_call.parquet")
+# df = convert_call_tess_aware(PATHS["tesserae"]["call"])
+# df.write_parquet(raw_path + "tesserae/tesserae_aware_call.parquet")
